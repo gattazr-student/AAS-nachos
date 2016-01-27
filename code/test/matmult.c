@@ -9,8 +9,8 @@
 
 #include "syscall.h"
 
-#define Dim 	20		/* sum total of the arrays doesn't fit in 
-				 * physical memory 
+#define Dim 	20		/* sum total of the arrays doesn't fit in
+				 * physical memory
 				 */
 
 int A[Dim][Dim];

@@ -21,7 +21,7 @@ CONTAINER_STATUS=""
 print_help(){
     echo -e "Usage: $PROG_NAME [start|stop|shell|delete|status]"
     echo -e "Script managing a docker image run as a daemon container and can start new shell on it\n"
-    
+
     echo -e "  start  \t\tCreate and start a daemon container. Restart if it was already created."
     echo -e "  stop   \t\tStop the daemon container"
     echo -e "  shell  \t\tStart a shell session on the container"
@@ -146,7 +146,7 @@ shell_container(){
 
     # Exit with an error code if there was an error
     if [ $? -ne 0 ]; then
-        return -1        
+        return -1
     fi
 
     return 0
@@ -213,6 +213,9 @@ if [ $# -ne 1 ]; then
     print_help
     exit -1
 fi
+
+# Check a docker-machine is running
+# TODO: do this :-)
 
 # Update the container informations
 get_container_info

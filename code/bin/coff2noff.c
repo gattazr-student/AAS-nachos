@@ -4,24 +4,24 @@
  * The NOFF format is essentially just a simpler version of the COFF file,
  * recording where each segment is in the NOFF file, and where it is to
  * go in the virtual address space.
- * 
+ *
  * Assumes coff file is linked with either
- *	gld with -N -Ttext 0 
+ *	gld with -N -Ttext 0
  * 	ld with  -N -T 0
  * to make sure the object file has no shared text.
  *
  * Also assumes that the COFF file has at most 3 segments:
- *	.text	-- read-only executable instructions 
+ *	.text	-- read-only executable instructions
  *	.data	-- initialized data
  *	.bss/.sbss -- uninitialized data (should be zero'd on program startup)
  *
  * Copyright (c) 1992-1993 The Regents of the University of California.
- * All rights reserved.  See copyright.h for copyright notice and limitation 
+ * All rights reserved.  See copyright.h for copyright notice and limitation
  * of liability and disclaimer of warranty provisions.
  */
 
 #define MAIN
-#include "copyright.h" 
+#include "copyright.h"
 #undef MAIN
 
 #include <sys/types.h>
@@ -50,7 +50,7 @@ WordToHost(unsigned int word) {
 	 result |= (word << 8) & 0x00ff0000;
 	 result |= (word << 24) & 0xff000000;
 	 return result;
-#else 
+#else
 	 return word;
 #endif /* HOST_IS_BIG_ENDIAN */
 }
@@ -62,7 +62,7 @@ ShortToHost(unsigned short shortword) {
 	 result = (shortword << 8) & 0xff00;
 	 result |= (shortword >> 8) & 0x00ff;
 	 return result;
-#else 
+#else
 	 return shortword;
 #endif /* HOST_IS_BIG_ENDIAN */
 }
@@ -104,7 +104,7 @@ int main (int argc, char **argv)
 	fprintf(stderr, "Usage: %s <coffFileName> <noffFileName>\n", argv[0]);
 	exit(1);
     }
-    
+
 /* open the COFF file (input) */
     fdIn = open(argv[1], O_RDONLY, 0);
     if (fdIn == -1) {
@@ -119,17 +119,17 @@ int main (int argc, char **argv)
 	exit(1);
     }
     noffFileName = argv[2];
-    
+
 /* Read in the file header and check the magic number. */
     ReadStruct(fdIn,fileh);
     fileh.f_magic = ShortToHost(fileh.f_magic);
-    fileh.f_nscns = ShortToHost(fileh.f_nscns); 
+    fileh.f_nscns = ShortToHost(fileh.f_nscns);
     if (fileh.f_magic != MIPSELMAGIC) {
 	fprintf(stderr, "File is not a MIPSEL COFF file\n");
         unlink(noffFileName);
 	exit(1);
     }
-    
+
 /* Read in the system header and check the magic number */
     ReadStruct(fdIn,systemh);
     systemh.magic = ShortToHost(systemh.magic);
@@ -138,7 +138,7 @@ int main (int argc, char **argv)
         unlink(noffFileName);
 	exit(1);
     }
-    
+
 /* Read in the section headers. */
     numsections = fileh.f_nscns;
     printf("numsections %d \n",numsections);
@@ -169,7 +169,7 @@ int main (int argc, char **argv)
 	       sections[i].s_paddr, sections[i].s_size,
 	       sections[i].s_flags);
 	if (sections[i].s_size == 0) {
-		/* do nothing! */	
+		/* do nothing! */
 	} else if (!strncmp(sections[i].s_name, ".text", 8)) {
 	    noffH.code.virtualAddr = sections[i].s_paddr;
 	    noffH.code.inFileAddr = inNoffFile;
@@ -182,8 +182,8 @@ int main (int argc, char **argv)
 	    inNoffFile += sections[i].s_size;
 	} else if (!strncmp(sections[i].s_name, ".data", 8)
 	  		|| !strcmp(sections[i].s_name, ".rdata")) {
-  	    /* need to check if we have both .data and .rdata 
-	     *  -- make sure one or the other is empty! */ 
+  	    /* need to check if we have both .data and .rdata
+	     *  -- make sure one or the other is empty! */
 	    if (noffH.initData.size != 0) {
 	        fprintf(stderr, "Can't handle both data and rdata\n");
 	        unlink(noffFileName);
@@ -200,7 +200,7 @@ int main (int argc, char **argv)
 	    inNoffFile += sections[i].s_size;
 	} else if (!strncmp(sections[i].s_name, ".bss", 8) ||
 			!strcmp(sections[i].s_name, ".sbss")) {
-  	    /* need to check if we have both .bss and .sbss -- make sure they 
+  	    /* need to check if we have both .bss and .sbss -- make sure they
 	     * are contiguous
 	     */
 	    if (noffH.uninitData.size != 0) {
