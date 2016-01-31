@@ -40,6 +40,22 @@ UpdatePC ()
     machine->WriteRegister (NextPCReg, pc);
 }
 
+#ifdef CHANGED
+void
+do_system_call(int syscallNum)
+{
+    switch(syscallNum){
+    case SC_Halt:
+        DEBUG ('a', "Shutdown, initiated by user program.\n");
+        interrupt->Halt ();
+        break;
+    default:
+        printf ("Unknown exception %d\n", syscallNum);
+        ASSERT (FALSE);
+    }
+}
+#endif
+
 
 //----------------------------------------------------------------------
 // ExceptionHandler
@@ -69,15 +85,22 @@ ExceptionHandler (ExceptionType which)
 {
     int type = machine->ReadRegister (2);
 
+#ifdef CHANGED
+    if (which == SyscallException)
+      {
+      do_system_call(type);
+      }
+#else
     if ((which == SyscallException) && (type == SC_Halt))
       {
-	  DEBUG ('a', "Shutdown, initiated by user program.\n");
-	  interrupt->Halt ();
+      DEBUG ('a', "Shutdown, initiated by user program.\n");
+      interrupt->Halt ();
       }
+#endif
     else
       {
-	  printf ("Unexpected user mode exception %d %d\n", which, type);
-	  ASSERT (FALSE);
+      printf ("Unexpected user mode exception %d %d\n", which, type);
+      ASSERT (FALSE);
       }
 
     // LB: Do not forget to increment the pc before returning!
