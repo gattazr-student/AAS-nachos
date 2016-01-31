@@ -44,8 +44,6 @@ UpdatePC ()
 void
 do_system_call(int syscallNum)
 {
-    int reg4;
-    int res;
 
     switch(syscallNum){
     case SC_Halt:
@@ -54,16 +52,36 @@ do_system_call(int syscallNum)
         break;
 
     case SC_GetChar:
-        DEBUG('a', "Getchar syscall.\n");
-        res = (int)synchconsole->SynchGetChar();
-        machine->WriteRegister(2, res);
+        {
+            int res;
+            DEBUG('a', "Getchar syscall.\n");
+            res = (int)synchconsole->SynchGetChar();
+            machine->WriteRegister(2, res);
+        }
         break;
 
     case SC_PutChar:
-        DEBUG('a', "Putchar syscall.\n");
-        reg4 = (char)machine->ReadRegister(4);//retrieve the char in r4
-        synchconsole->SynchPutChar(reg4);
-		break;
+        {
+            char c;
+            DEBUG('a', "Putchar syscall.\n");
+            c = (char)machine->ReadRegister(4);//retrieve the char in r4
+            synchconsole->SynchPutChar(c);
+        }
+        break;
+
+
+    case SC_GetString:
+        {
+            // TODO
+        }
+        break;
+
+    case SC_PutString:
+        {
+            // TODO
+        }
+        break;
+
 
     default:
         printf ("Unknown exception %d\n", syscallNum);

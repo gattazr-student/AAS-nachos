@@ -33,6 +33,8 @@
 #ifdef CHANGED
 #define SC_GetChar        11
 #define SC_PutChar        12
+#define SC_GetString      13
+#define SC_PutString      14
 #endif
 
 #ifdef IN_USER_MODE
@@ -144,6 +146,16 @@ char GetChar();
  * put a char
  */
 void PutChar(int c);
+
+/**
+ * return a string
+ */
+char* GetString(char* str, unsigned int size);
+
+/**
+ * put a string
+ */
+void PutString(char* str);
 
 #endif
 
