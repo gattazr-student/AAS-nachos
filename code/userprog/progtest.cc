@@ -13,6 +13,9 @@
 #include "console.h"
 #include "addrspace.h"
 #include "synch.h"
+#ifdef CHANGED
+#include "synchconsole.h"
+#endif
 
 //----------------------------------------------------------------------
 // StartProcess
@@ -84,6 +87,7 @@ ConsoleTest (char *in, char *out)
     writeDone = new Semaphore ("write done", 0);
 
 #ifdef CHANGED
+    /* new version of the console handling the Ctrl+D*/
     char ch_prev = '\n';
     for (;;)
       {
@@ -112,3 +116,18 @@ ConsoleTest (char *in, char *out)
       }
 #endif
 }
+
+
+#ifdef CHANGED
+void
+SynchConsoleTest (char *in, char *out)
+{
+    char ch;
+    SynchConsole *synchconsole = new SynchConsole(in, out);
+
+    while ((ch = synchconsole->SynchGetChar()) != EOF)
+      synchconsole->SynchPutChar(ch);
+
+    fprintf(stderr, "Solaris: EOF detected in SynchConsole!\n");
+}
+#endif
