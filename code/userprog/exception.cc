@@ -44,11 +44,27 @@ UpdatePC ()
 void
 do_system_call(int syscallNum)
 {
+    int reg4;
+    int res;
+
     switch(syscallNum){
     case SC_Halt:
         DEBUG ('a', "Shutdown, initiated by user program.\n");
         interrupt->Halt ();
         break;
+
+    case SC_GetChar:
+        DEBUG('a', "Getchar syscall.\n");
+        res = (int)synchconsole->SynchGetChar();
+        machine->WriteRegister(2, res);
+        break;
+
+    case SC_PutChar:
+        DEBUG('a', "Putchar syscall.\n");
+        reg4 = (char)machine->ReadRegister(4);//retrieve the char in r4
+        synchconsole->SynchPutChar(reg4);
+		break;
+
     default:
         printf ("Unknown exception %d\n", syscallNum);
         ASSERT (FALSE);

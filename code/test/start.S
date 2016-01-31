@@ -1,4 +1,4 @@
-/* Start.s 
+/* Start.s
  *	Assembly language assist for user programs running on top of Nachos.
  *
  *	Since we don't want to pull in the entire C library, we define
@@ -128,6 +128,25 @@ Yield:
 	syscall
 	j	$31
 	.end Yield
+
+#ifdef CHANGED
+	.globl 	GetChar
+	.ent	GetChar
+GetChar:
+	addiu $2,$0,SC_GetChar
+	syscall
+	j	$31
+	.end GetChar
+
+    .globl 	PutChar
+    .ent	PutChar
+PutChar:
+	addiu $2,$0,SC_PutChar
+	syscall
+	j	$31
+	.end PutChar
+
+#endif
 
 /* dummy function to keep gcc happy */
         .globl  __main
