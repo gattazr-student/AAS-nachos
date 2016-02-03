@@ -114,6 +114,14 @@ do_system_call(int syscallNum)
         }
         break;
 
+    case SC_Exit:
+        {
+            int exitValue;
+            DEBUG ('a', "Exit syscall.");
+            exitValue = (int)machine->ReadRegister(4);
+            Exit(exitValue);
+        }
+        break;
 
     default:
         printf ("Unknown exception %d\n", syscallNum);
