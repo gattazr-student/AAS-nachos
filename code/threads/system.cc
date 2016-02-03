@@ -193,6 +193,10 @@ Cleanup ()
 
 #ifdef USER_PROGRAM
     delete machine;
+
+#ifdef CHANGED
+    delete synchconsole;
+#endif
 #endif
 
 #ifdef FILESYS_NEEDED
