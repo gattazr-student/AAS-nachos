@@ -25,6 +25,30 @@
 #include "system.h"
 #include "syscall.h"
 
+#ifdef CHANGED
+// ----
+// Copy a string from the MIPS machine into the system
+// ---
+void
+copyStringFromMachine(int from, char *to, unsigned size){
+    unsigned read = 0;
+    bool readCorrect = TRUE;
+    int value;
+
+    while(read < size){
+        readCorrect = machine->ReadMem(from + read, 1, &value);
+        if(readCorrect == FALSE){
+            break;
+        }else{
+            to[read] = value;
+            read++;
+        }
+    }
+    to[size-1] = '\0';
+}
+#endif
+
+
 //----------------------------------------------------------------------
 // UpdatePC : Increments the Program Counter register in order to resume
 // the user program immediately after the "syscall" instruction.
@@ -78,7 +102,15 @@ do_system_call(int syscallNum)
 
     case SC_PutString:
         {
-            // TODO
+            int pstrmips;
+            char *str;
+            DEBUG('a', "PutString syscall.\n");
+            pstrmips = (int)machine->ReadRegister(4);
+            str = new char[MAX_STRING_SIZE];
+
+            copyStringFromMachine(pstrmips, str, MAX_STRING_SIZE);
+            synchconsole->SynchPutString(str);
+            delete str;
         }
         break;
 
