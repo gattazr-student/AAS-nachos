@@ -43,7 +43,8 @@ void SynchConsole::SynchPutString(const char s[])
 }
 
 /**
- * Read a string until EOF or \n is found. Read n-1 char at most
+ * Read and create a string until EOF or \n is found. Read n-1 char at most.
+ * if \n found, it is kept. EOF isn't.
  */
 void SynchConsole::SynchGetString(char *s, int n)
 {
@@ -51,8 +52,12 @@ void SynchConsole::SynchGetString(char *s, int n)
     while( i < n-1) {
         s[i] = this->SynchGetChar();
 
-        /* We stop reading at \n or EOF (not kept) */
-        if(s[i] == '\n' || s[i] == EOF){
+        /* We stop reading at \n or EOF */
+        if(s[i] == '\n'){
+            i++;
+            break;
+        }
+        if(s[i] == EOF){
             break;
         }
         i++;

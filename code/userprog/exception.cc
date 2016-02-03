@@ -32,17 +32,17 @@
 void
 copyStringFromMachine(int from, char *to, unsigned size){
     unsigned read = 0;
-    int *cursor;
+    int readValue;
 
-    cursor = (int*)to;
     while(read < size-1){
-        machine->ReadMem(from + read, 1, cursor);
-        if(*cursor == '\0'){
+        machine->ReadMem(from + read, 1, &readValue);
+        if(readValue == '\0'){
             break;
         }
-        cursor++;
+        to[read] = (char) readValue;
+        read++;
     }
-    *cursor = '\0';
+    to[read] = '\0';
 }
 
 // ----
@@ -55,7 +55,7 @@ copyStringToMachine(char* from, int to, unsigned size){
 
     while(written < size-1){
         nextChar = (int)from[written];
-        if(nextChar == EOF || nextChar == '\0' || nextChar == '\n' || nextChar == '\r'){
+        if(nextChar == EOF || nextChar == '\0'){
             break;
         }
         machine->WriteMem(to+written, 1, nextChar);
