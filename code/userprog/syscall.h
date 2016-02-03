@@ -150,7 +150,7 @@ void PutChar(int c);
 /**
  * return a string
  */
-char* GetString(char* str, unsigned int size);
+void GetString(char* str, unsigned int size);
 
 /**
  * put a string

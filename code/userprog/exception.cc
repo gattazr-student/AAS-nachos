@@ -32,19 +32,36 @@
 void
 copyStringFromMachine(int from, char *to, unsigned size){
     unsigned read = 0;
-    bool readCorrect = TRUE;
-    int value;
+    int *cursor;
 
-    while(read < size){
-        readCorrect = machine->ReadMem(from + read, 1, &value);
-        if(readCorrect == FALSE){
+    cursor = (int*)to;
+    while(read < size-1){
+        machine->ReadMem(from + read, 1, cursor);
+        if(*cursor == '\0'){
             break;
-        }else{
-            to[read] = value;
-            read++;
         }
+        cursor++;
     }
-    to[size-1] = '\0';
+    *cursor = '\0';
+}
+
+// ----
+// Copy a string from the system to the MIPS machine
+// ---
+void
+copyStringToMachine(char* from, int to, unsigned size){
+    unsigned int written = 0;
+    int nextChar;
+
+    while(written < size-1){
+        nextChar = (int)from[written];
+        if(nextChar == EOF || nextChar == '\0' || nextChar == '\n' || nextChar == '\r'){
+            break;
+        }
+        machine->WriteMem(to+written, 1, nextChar);
+        written++;
+    }
+    machine->WriteMem(to+written, 1, '\0');
 }
 #endif
 
@@ -96,21 +113,32 @@ do_system_call(int syscallNum)
 
     case SC_GetString:
         {
-            // TODO
+            int strMips;
+            int strSize;
+            char *str;
+
+            DEBUG('a', "GetString syscall.\n");
+            strMips = (int)machine->ReadRegister(4);
+            strSize = (int)machine->ReadRegister(5);
+            str = new char[strSize];
+
+            synchconsole->SynchGetString(str, strSize);
+            copyStringToMachine(str, strMips, strSize);
+            delete[] str;
         }
         break;
 
     case SC_PutString:
         {
-            int pstrmips;
+            int strMips;
             char *str;
             DEBUG('a', "PutString syscall.\n");
-            pstrmips = (int)machine->ReadRegister(4);
+            strMips = (int)machine->ReadRegister(4);
             str = new char[MAX_STRING_SIZE];
 
-            copyStringFromMachine(pstrmips, str, MAX_STRING_SIZE);
+            copyStringFromMachine(strMips, str, MAX_STRING_SIZE);
             synchconsole->SynchPutString(str);
-            delete str;
+            delete[] str;
         }
         break;
 
