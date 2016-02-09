@@ -64,4 +64,18 @@ void SynchConsole::SynchGetString(char *s, int n)
     }
     s[i] = '\0';
 }
+
+void SynchConsole::SynchPutInt(int i){
+	char str[MAX_STRING_SIZE];
+
+    snprintf(str, MAX_STRING_SIZE, "%d", i);
+	this->SynchPutString(str);
+}
+
+void SynchConsole::SynchGetInt(int *i){
+	char str[MAX_STRING_SIZE];
+	this->SynchGetString(str, MAX_STRING_SIZE);
+	*i=0;
+    sscanf(str, "%d", i);
+}
 #endif // CHANGED

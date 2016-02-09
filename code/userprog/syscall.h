@@ -35,6 +35,8 @@
 #define SC_PutChar        12
 #define SC_GetString      13
 #define SC_PutString      14
+#define SC_GetInt         15
+#define SC_PutInt         16
 #endif
 
 #ifdef IN_USER_MODE
@@ -156,6 +158,16 @@ void GetString(char* str, unsigned int size);
  * put a string
  */
 void PutString(char* str);
+
+/**
+ * return an int
+ */
+void GetInt();
+
+/**
+ * put an int
+ */
+void PutInt(int i);
 
 #endif
 

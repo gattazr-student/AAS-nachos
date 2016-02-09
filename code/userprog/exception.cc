@@ -110,7 +110,6 @@ do_system_call(int syscallNum)
         }
         break;
 
-
     case SC_GetString:
         {
             int strMips;
@@ -139,6 +138,30 @@ do_system_call(int syscallNum)
             copyStringFromMachine(strMips, str, MAX_STRING_SIZE);
             synchconsole->SynchPutString(str);
             delete[] str;
+        }
+        break;
+
+    case SC_GetInt:
+        {
+            int i;
+            int addr;
+            DEBUG('a', "GetInt syscall.\n");
+            /* a int* was given to getInt */
+            addr = (int)machine->ReadRegister(4);
+            synchconsole->SynchGetInt(&i);
+
+            /* Use WriteMem to write i in mips memory at addr */
+            machine->WriteMem(addr, sizeof(int), i);
+        }
+        break;
+
+    case SC_PutInt:
+        {
+            int i;
+            DEBUG('a', "PutInt syscall.\n");
+            i = (int)machine->ReadRegister(4);
+
+            synchconsole->SynchPutInt(i);
         }
         break;
 
