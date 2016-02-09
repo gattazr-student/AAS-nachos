@@ -22,16 +22,17 @@ SynchConsole::~SynchConsole()
     delete writeDone;
     delete readAvail;
 }
+
 void SynchConsole::SynchPutChar(const char ch)
 {
     console->PutChar(ch);	// echo it!
     writeDone->P();	// wait for write to finish
 }
 
-char SynchConsole::SynchGetChar()
+int SynchConsole::SynchGetChar()
 {
     readAvail->P(); // wait for character to arrive
-    return console->GetChar ();
+    return (int)console->GetChar();
 }
 
 void SynchConsole::SynchPutString(const char s[])
@@ -57,7 +58,7 @@ void SynchConsole::SynchGetString(char *s, int n)
             i++;
             break;
         }
-        if(s[i] == EOF){
+        if((int)s[i] == EOF){
             break;
         }
         i++;

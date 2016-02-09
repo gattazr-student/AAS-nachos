@@ -1,4 +1,4 @@
-// console.h 
+// console.h
 //	Data structures to simulate the behavior of a terminal
 //	I/O device.  A terminal has two parts -- a keyboard input,
 //	and a display output, each of which produces/accepts
@@ -55,6 +55,8 @@ class Console {
 // internal emulation routines -- DO NOT call these.
     void WriteDone();	 	// internal routines to signal I/O completion
     void CheckCharAvail();
+
+    int Feof(); // return 1 if next read is EOF. 0 otherwise
 
   private:
     int readFileNo;			// UNIX file emulating the keyboard

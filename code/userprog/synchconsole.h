@@ -13,12 +13,12 @@ class SynchConsole {
         /* Unix putchar(3S) */
         void SynchPutChar(const char ch);
         /* Unix getchar(3S) */
-        char SynchGetChar();
+        int SynchGetChar();
         /* Unix puts(3S) */
         void SynchPutString(const char *s);
         /* Unix fgets(3S) */
         void SynchGetString(char *s, int n);
-        
+
         void SynchPutInt(int i);
         void SynchGetInt(int *i);
     private:
