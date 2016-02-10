@@ -2,11 +2,11 @@
 #include "stdio.h"
 
 int main() {
-    char c;
+    int c;
     /* Read a char and print it */
     c = GetChar();
     while(c != EOF){
-        PutChar(c);
+        PutChar((char)c);
         c = GetChar();
     }
     PutChar('\n');
