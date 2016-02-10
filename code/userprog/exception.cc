@@ -25,6 +25,47 @@
 #include "system.h"
 #include "syscall.h"
 
+#ifdef CHANGED
+// ----
+// Copy a string from the MIPS machine into the system
+// ---
+void
+copyStringFromMachine(int from, char *to, unsigned size){
+    unsigned read = 0;
+    int readValue;
+
+    while(read < size-1){
+        machine->ReadMem(from + read, 1, &readValue);
+        if(readValue == '\0'){
+            break;
+        }
+        to[read] = (char) readValue;
+        read++;
+    }
+    to[read] = '\0';
+}
+
+// ----
+// Copy a string from the system to the MIPS machine
+// ---
+void
+copyStringToMachine(char* from, int to, unsigned size){
+    unsigned int written = 0;
+    int nextChar;
+
+    while(written < size-1){
+        nextChar = (int)from[written];
+        if(nextChar == EOF || nextChar == '\0'){
+            break;
+        }
+        machine->WriteMem(to+written, 1, nextChar);
+        written++;
+    }
+    machine->WriteMem(to+written, 1, '\0');
+}
+#endif
+
+
 //----------------------------------------------------------------------
 // UpdatePC : Increments the Program Counter register in order to resume
 // the user program immediately after the "syscall" instruction.
@@ -39,6 +80,106 @@ UpdatePC ()
     pc += 4;
     machine->WriteRegister (NextPCReg, pc);
 }
+
+#ifdef CHANGED
+void
+do_system_call(int syscallNum)
+{
+
+    switch(syscallNum){
+    case SC_Halt:
+        DEBUG ('a', "Shutdown, initiated by user program.\n");
+        interrupt->Halt ();
+        break;
+
+    case SC_GetChar:
+        {
+            int res;
+            DEBUG('a', "Getchar syscall.\n");
+            res = (int)synchconsole->SynchGetChar();
+            machine->WriteRegister(2, res);
+        }
+        break;
+
+    case SC_PutChar:
+        {
+            char c;
+            DEBUG('a', "Putchar syscall.\n");
+            c = (char)machine->ReadRegister(4);//retrieve the char in r4
+            synchconsole->SynchPutChar(c);
+        }
+        break;
+
+    case SC_GetString:
+        {
+            int strMips;
+            int strSize;
+            char *str;
+
+            DEBUG('a', "GetString syscall.\n");
+            strMips = (int)machine->ReadRegister(4);
+            strSize = (int)machine->ReadRegister(5);
+            str = new char[strSize];
+
+            synchconsole->SynchGetString(str, strSize);
+            copyStringToMachine(str, strMips, strSize);
+            delete[] str;
+        }
+        break;
+
+    case SC_PutString:
+        {
+            int strMips;
+            char *str;
+            DEBUG('a', "PutString syscall.\n");
+            strMips = (int)machine->ReadRegister(4);
+            str = new char[MAX_STRING_SIZE];
+
+            copyStringFromMachine(strMips, str, MAX_STRING_SIZE);
+            synchconsole->SynchPutString(str);
+            delete[] str;
+        }
+        break;
+
+    case SC_GetInt:
+        {
+            int i;
+            int addr;
+            DEBUG('a', "GetInt syscall.\n");
+            /* a int* was given to getInt */
+            addr = (int)machine->ReadRegister(4);
+            synchconsole->SynchGetInt(&i);
+
+            /* Use WriteMem to write i in mips memory at addr */
+            machine->WriteMem(addr, sizeof(int), i);
+        }
+        break;
+
+    case SC_PutInt:
+        {
+            int i;
+            DEBUG('a', "PutInt syscall.\n");
+            i = (int)machine->ReadRegister(4);
+
+            synchconsole->SynchPutInt(i);
+        }
+        break;
+
+    case SC_Exit:
+        {
+            int exitValue;
+            DEBUG ('a', "Exit syscall.");
+            exitValue = (int)machine->ReadRegister(4);
+            Exit(exitValue);
+        }
+        break;
+
+    default:
+        printf ("Unknown exception %d\n", syscallNum);
+        ASSERT (FALSE);
+    }
+}
+#endif
 
 
 //----------------------------------------------------------------------
@@ -69,15 +210,22 @@ ExceptionHandler (ExceptionType which)
 {
     int type = machine->ReadRegister (2);
 
+#ifdef CHANGED
+    if (which == SyscallException)
+      {
+      do_system_call(type);
+      }
+#else
     if ((which == SyscallException) && (type == SC_Halt))
       {
-	  DEBUG ('a', "Shutdown, initiated by user program.\n");
-	  interrupt->Halt ();
+      DEBUG ('a', "Shutdown, initiated by user program.\n");
+      interrupt->Halt ();
       }
+#endif
     else
       {
-	  printf ("Unexpected user mode exception %d %d\n", which, type);
-	  ASSERT (FALSE);
+      printf ("Unexpected user mode exception %d %d\n", which, type);
+      ASSERT (FALSE);
       }
 
     // LB: Do not forget to increment the pc before returning!

@@ -149,3 +149,12 @@ Console::PutChar(char ch)
     interrupt->Schedule(ConsoleWriteDone, (int)this, ConsoleTime,
 					ConsoleWriteInt);
 }
+
+//----------------------------------------------------------------------
+// Console::Feof()
+// 	returns 1 if the next char to read in buffer is EOF. 0 otherwise
+//----------------------------------------------------------------------
+int
+Console::Feof(){
+	return (this->incoming == EOF);
+}

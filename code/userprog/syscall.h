@@ -1,4 +1,4 @@
-/* syscalls.h 
+/* syscalls.h
  * 	Nachos system call interface.  These are Nachos kernel operations
  * 	that can be invoked from user programs, by trapping to the kernel
  *	via the "syscall" instruction.
@@ -29,6 +29,15 @@
 #define SC_Close	8
 #define SC_Fork		9
 #define SC_Yield	10
+
+#ifdef CHANGED
+#define SC_GetChar        11
+#define SC_PutChar        12
+#define SC_GetString      13
+#define SC_PutString      14
+#define SC_GetInt         15
+#define SC_PutInt         16
+#endif
 
 #ifdef IN_USER_MODE
 
@@ -127,6 +136,40 @@ void Fork (void (*func) ());
  * or not.
  */
 void Yield ();
+
+#ifdef CHANGED
+
+/**
+ * return a char
+ */
+char GetChar();
+
+/**
+ * put a char
+ */
+void PutChar(int c);
+
+/**
+ * return a string
+ */
+void GetString(char* str, unsigned int size);
+
+/**
+ * put a string
+ */
+void PutString(char* str);
+
+/**
+ * return an int
+ */
+void GetInt();
+
+/**
+ * put an int
+ */
+void PutInt(int i);
+
+#endif
 
 #endif // IN_USER_MODE
 

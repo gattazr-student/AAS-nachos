@@ -13,6 +13,9 @@
 #include "console.h"
 #include "addrspace.h"
 #include "synch.h"
+#ifdef CHANGED
+#include "synchconsole.h"
+#endif
 
 //----------------------------------------------------------------------
 // StartProcess
@@ -83,13 +86,48 @@ ConsoleTest (char *in, char *out)
     readAvail = new Semaphore ("read avail", 0);
     writeDone = new Semaphore ("write done", 0);
 
+#ifdef CHANGED
+    /* new version of the console handling the Ctrl+D*/
+    char ch_prev = '\n';
     for (;;)
       {
-	  readAvail->P ();	// wait for character to arrive
-	  ch = console->GetChar ();
-	  console->PutChar (ch);	// echo it!
-	  writeDone->P ();	// wait for write to finish
-	  if (ch == 'q')
-	      return;		// if q, quit
+      readAvail->P ();	// wait for character to arrive
+      ch = console->GetChar ();
+
+      /* Exit if EOF read in file or at beggining of line in interactive mode*/
+      if ( (ch_prev == '\n' || in != NULL ) && ch == EOF)
+        return;
+
+      console->PutChar (ch);	// echo it!
+      writeDone->P ();	// wait for write to finish
+
+      ch_prev = ch;
       }
+#else
+    for (;;)
+      {
+      readAvail->P ();	// wait for character to arrive
+      ch = console->GetChar ();
+      console->PutChar (ch);	// echo it!
+	  writeDone->P ();	// wait for write to finish
+
+      if (ch == 'q')
+        return;		// if q, quit
+      }
+#endif
 }
+
+
+#ifdef CHANGED
+void
+SynchConsoleTest (char *aIn, char *aOut)
+{
+    char wCh;
+    SynchConsole *wSynchconsole = new SynchConsole(aIn, aOut);
+
+    while ((wCh = wSynchconsole->SynchGetChar()) != EOF)
+      wSynchconsole->SynchPutChar(wCh);
+
+    fprintf(stderr, "Solaris: EOF detected in SynchConsole!\n");
+}
+#endif
