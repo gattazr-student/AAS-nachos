@@ -1,0 +1,80 @@
+\documentclass[a4paper,10pt]{article}
+
+% Encodage and langue
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[francais]{babel}
+
+% Redéfinition des marges
+\usepackage[top=2cm, bottom=2cm, left=2.0cm, right=2cm]{geometry}
+
+% Package pour insertion de code
+\usepackage{listings} % Insertion de code
+\usepackage{graphicx} % insertion d'images
+% \usepackage{float} % Placement d'éléments
+\usepackage[dvipsnames]{xcolor} % colors
+\usepackage{url} % Insertion d'url url
+
+% \usepackage{amsfonts} % pour utiliser les symboles de ensembles (reel...autre)
+% \usepackage{amsmath} %debut des package pour utiliser les formules de math
+% \usepackage{amssymb}
+% \usepackage{mathrsfs}
+%\usepackage{wrapfig}
+
+
+% Listing config
+\lstset{
+    language=C++,
+    basicstyle=\normalsize, % ou ça==> basicstyle=\scriptsize,
+    % upquote=true,
+    aboveskip={1.5\baselineskip},
+    columns=fullflexible,
+    showstringspaces=false,
+    extendedchars=true,
+    breaklines=true,
+    showtabs=false,
+    showspaces=false,
+    showstringspaces=false,
+    identifierstyle=\ttfamily,
+    keywordstyle=\color[rgb]{0,0,1},
+    commentstyle=\color[rgb]{0.133,0.545,0.133},
+    stringstyle=\color[rgb]{0.627,0.126,0.941},
+}
+
+\title{Step 2 : Exceptions, Entrées et sorties utilisateurs}
+\author{Tanguy MATHIEU, Florian POPEK, Rémi GATTAZ, Jordan ELLAPIN}
+
+
+\begin{document}
+    \maketitle
+    \tableofcontents
+    \newpage
+
+    \section{Objectifs}
+    Au cours de cette étape, nous avons eu les objectifs suivant :
+    \begin{itemize}
+        \item Comprendre le fonctionnement des appels systèmes
+        \item Comprendre le fonctionnement de la console asynchrone
+        \item Créer une console synchrone
+        \item Ajouter des appels systèmes pour gérer les entrées sorties
+    \end{itemize}
+
+    Chacun de ces objectifs va être détaillé dans une partie.
+
+
+    \section{Appels systèmes}
+
+    \section{Console asynchrone}
+
+    \section{Console synchrone}
+
+    \section{Entrées/Sorties}
+
+    \subsection{GetChar/PutChar}
+    \subsection{GetString/PutString}
+    \subsection{GetInt/PutInt}
+
+
+    \subsection{FEOF}
+
+\end{document}
