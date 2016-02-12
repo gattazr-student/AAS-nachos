@@ -24,6 +24,10 @@
 #include "copyright.h"
 #include "system.h"
 #include "syscall.h"
+#ifdef CHANGED
+#include "userthread.h"
+#endif
+
 
 #ifdef CHANGED
 // ----
@@ -162,6 +166,29 @@ do_system_call(int syscallNum)
             i = (int)machine->ReadRegister(4);
 
             synchconsole->SynchPutInt(i);
+        }
+        break;
+        
+    case SC_UserThreadCreate:
+        {
+            int ptr;
+            int arg;
+            DEBUG('a', "UserThreadCreate syscall.\n");
+            ptr = (int)machine->ReadRegister(4);
+            arg = (int)machine->ReadRegister(5);
+            
+            if (do_UserThreadCreate(ptr, arg) == -1) {
+                printf ("Unable to create user thread %d\n", syscallNum);
+                ASSERT (FALSE);
+            }
+        }
+        break;
+        
+    case SC_UserThreadExit:
+        {
+            DEBUG('a', "UserThreadExit syscall.\n");
+            
+            do_UserThreadExit();
         }
         break;
 

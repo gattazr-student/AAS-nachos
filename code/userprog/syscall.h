@@ -37,6 +37,8 @@
 #define SC_PutString      14
 #define SC_GetInt         15
 #define SC_PutInt         16
+#define SC_UserThreadCreate      17
+#define SC_UserThreadExit        18
 #endif
 
 #ifdef IN_USER_MODE
@@ -168,6 +170,16 @@ void GetInt();
  * put an int
  */
 void PutInt(int i);
+
+/**
+ * create a user thread
+ */
+void UserThreadCreate(void f(void *arg), void *arg);
+
+/**
+ * exit a user thread
+ */
+void UserThreadExit();
 
 #endif
 
