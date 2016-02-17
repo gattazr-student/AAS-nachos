@@ -31,9 +31,14 @@
 //
 //      "threadName" is an arbitrary string, useful for debugging.
 //----------------------------------------------------------------------
-
+#ifdef CHANGED
+Thread::Thread (const char *threadName, int threadId)
+{
+    this->tId = threadId;
+#else
 Thread::Thread (const char *threadName)
 {
+#endif
     name = threadName;
     stackTop = NULL;
     stack = NULL;

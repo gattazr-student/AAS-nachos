@@ -16,7 +16,11 @@
 #include "copyright.h"
 #include "filesys.h"
 
+#ifdef CHANGED
+#define UserStackSize		MaxNumThread*PageThread*PageSize	// increase this as necessary!
+#else
 #define UserStackSize		1024	// increase this as necessary!
+#endif
 
 class AddrSpace
 {
@@ -37,6 +41,11 @@ class AddrSpace
     // for now!
     unsigned int numPages;	// Number of pages in the virtual
     // address space
+    
+#ifdef CHANGED
+   public:
+    unsigned int getNumPages() {return numPages;}
+#endif
 };
 
 #endif // ADDRSPACE_H

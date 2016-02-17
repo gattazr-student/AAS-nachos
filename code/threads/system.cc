@@ -32,6 +32,7 @@ Machine *machine;		// user program memory and registers
 
 #ifdef CHANGED
 SynchConsole *synchconsole;
+BitMap *threadbitmap;
 #endif
 #endif
 
@@ -163,6 +164,8 @@ Initialize (int argc, char **argv)
     machine = new Machine (debugUserProg);	// this must come first
 #ifdef CHANGED
     synchconsole = new SynchConsole(NULL, NULL);
+    threadbitmap = new BitMap(MaxNumThread); // Initialisation de la bitmap des threads
+    threadbitmap->Mark(0); // thread principal
 #endif
 #endif
 
