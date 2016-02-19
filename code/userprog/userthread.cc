@@ -19,23 +19,17 @@ int do_UserThreadCreate(int f, int arg) {
     else
         return -1;
 
-    return 0;
+    return new_tId;
 }
 
-int do_UserThreadExit() {
+void do_UserThreadExit() {
     // Clear the bitmap
     threadbitmap->Clear(currentThread->getId());
 
     // Kill the thread
     currentThread->Finish();
-
-    return 0;
 }
-/*
-void UserThreadExit() {
 
-}
-*/
 void StartUserThread(int f) {
 
     struct_user_thread* args;

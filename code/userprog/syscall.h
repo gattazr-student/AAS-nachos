@@ -174,7 +174,7 @@ void PutInt(int i);
 /**
  * create a user thread
  */
-void UserThreadCreate(void f(void *arg), void *arg);
+int UserThreadCreate(void f(void *arg), void *arg);
 
 /**
  * exit a user thread
