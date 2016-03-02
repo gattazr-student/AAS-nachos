@@ -176,6 +176,9 @@ Thread::Finish ()
     // End of addition
 
     threadToBeDestroyed = currentThread;
+    #ifdef CHANGED
+        interrupt->haltCond->Signal(interrupt->haltLock);
+    #endif
     Sleep ();			// invokes SWITCH
     // not reached
 }

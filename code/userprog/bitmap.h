@@ -45,6 +45,10 @@ class BitMap
     // effect, set the bit.
     // If no bits are clear, return -1.
     int NumClear ();		// Return the number of clear bits
+    
+#ifdef CHANGED
+    int NumThreads ();
+#endif 
 
     void Print ();		// Print contents of bitmap
 

@@ -88,6 +88,10 @@ class Lock
   private:
     const char *name;		// for debugging
     // plus some other stuff you'll need to define
+#ifdef CHANGED
+    int value_locked;			// lock value, 0 if free, 1 if locked
+    List *queue;		// threads waiting in P() for the lock value to be == 0
+#endif
 };
 
 // The following class defines a "condition variable".  A condition
@@ -144,5 +148,10 @@ class Condition
   private:
     const char *name;
     // plus some other stuff you'll need to define
+    #ifdef CHANGED
+        Semaphore* s;
+        Semaphore* x;
+        List *queue;
+    #endif
 };
 #endif // SYNCH_H

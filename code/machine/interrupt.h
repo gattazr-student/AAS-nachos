@@ -37,6 +37,7 @@
 
 #include "copyright.h"
 #include "list.h"
+#include "synch.h"
 
 // Interrupts can be disabled (IntOff) or enabled (IntOn)
 enum IntStatus { IntOff, IntOn };
@@ -112,6 +113,11 @@ class Interrupt {
     					// by the hardware device simulators.
 
     void OneTick();       		// Advance simulated time
+
+#ifdef CHANGED
+    Condition* haltCond;
+    Lock* haltLock;
+#endif
 
   private:
     IntStatus level;		// are interrupts enabled or disabled?

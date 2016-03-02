@@ -123,6 +123,14 @@ BitMap::NumClear ()
     return count;
 }
 
+#ifdef CHANGED
+int
+BitMap::NumThreads () 
+{
+    return numBits - NumClear();
+}
+#endif 
+
 //----------------------------------------------------------------------
 // BitMap::Print
 //      Print the contents of the bitmap, for debugging.

@@ -93,7 +93,7 @@ Semaphore::V ()
 
     thread = (Thread *) queue->Remove ();
     if (thread != NULL)		// make thread ready, consuming the V immediately
-	scheduler->ReadyToRun (thread);
+	   scheduler->ReadyToRun (thread);
     value++;
     (void) interrupt->SetLevel (oldLevel);
 }
@@ -103,38 +103,127 @@ Semaphore::V ()
 // the test case in the network assignment won't work!
 Lock::Lock (const char *debugName)
 {
+    #ifdef CHANGED
+        name = debugName;
+        value_locked = 0;
+        queue = new List;
+    #endif
 }
 
 Lock::~Lock ()
 {
+    #ifdef CHANGED
+        delete queue;
+    #endif
 }
 void
 Lock::Acquire ()
 {
+    #ifdef CHANGED
+        IntStatus oldLevel = interrupt->SetLevel (IntOff);	// disable interrupts
+
+        while (value_locked == 1)
+        {				// lock unavailable
+            queue->Append ((void *) currentThread);	// so go to sleep
+            currentThread->Sleep ();
+        }
+        value_locked = 1;			// lock available
+        // consume its value
+
+        (void) interrupt->SetLevel (oldLevel);	// re-enable interrupts
+    #endif
 }
 void
 Lock::Release ()
 {
+    #ifdef CHANGED
+        Thread *thread;
+        IntStatus oldLevel = interrupt->SetLevel (IntOff);
+
+        thread = (Thread *) queue->Remove ();
+        if (thread != NULL)		// make thread ready
+            scheduler->ReadyToRun (thread);
+        value_locked = 0; // release lock
+        (void) interrupt->SetLevel (oldLevel);
+    #endif
 }
+
+
+////////////////////////////////////////////////
+
 
 Condition::Condition (const char *debugName)
 {
+    #ifdef CHANGED
+        name = debugName;
+        s = new Semaphore("CondSemS", 0);
+        x = new Semaphore("CondSemX", 1);
+        queue = new List;
+    #endif
 }
 
 Condition::~Condition ()
 {
+    #ifdef CHANGED
+        delete queue;
+        delete s;
+        delete x;
+    #endif
 }
+
 void
-Condition::Wait (Lock * conditionLock)
+Condition::Wait (Lock * conditionLock) // Pre-condition: this thread holds "conditionLock"
 {
-    ASSERT (FALSE);
+    #ifdef CHANGED
+        IntStatus oldLevel = interrupt->SetLevel (IntOff);	// disable interrupts
+        
+        x->P();
+       
+        conditionLock->Release();
+        
+        x->V();
+        
+        queue->Append ((void *) currentThread);	// so go to sleep
+        currentThread->Sleep ();
+        
+        s->P();
+        
+        conditionLock->Acquire();
+        
+        (void) interrupt->SetLevel (oldLevel);
+    #endif
 }
 
 void
 Condition::Signal (Lock * conditionLock)
 {
+    #ifdef CHANGED
+        Thread *thread;
+        
+        x->P();
+        
+        thread = (Thread *) queue->Remove ();
+        if (thread != NULL) {
+            s->V();
+            scheduler->ReadyToRun (thread);
+        }
+        
+        x->V();
+    #endif
 }
+
 void
 Condition::Broadcast (Lock * conditionLock)
 {
+    #ifdef CHANGED
+        Thread *thread;
+        x->P();
+        
+        while ((thread = (Thread *) queue->Remove ()) != NULL) {
+            s->V();
+            scheduler->ReadyToRun (thread);
+        }
+        
+        x->V();
+    #endif
 }
