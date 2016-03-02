@@ -10,7 +10,7 @@ struct struct_user_thread
 
 int do_UserThreadCreate(int f, int arg);
 
-void do_UserThreadExit();
+int do_UserThreadExit();
 
 void StartUserThread(int f);
 
