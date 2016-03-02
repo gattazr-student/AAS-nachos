@@ -24,8 +24,15 @@
 	.ent	__start
 __start:
 	jal	main
+#ifdef CHANGED
+	/* if we return from main, exit(returnedValue) */
+	/* The returned value is in r2 */
+	move	$4,$2
+	jal	Exit
+#else
 	move	$4,$0
 	jal	Exit	 /* if we return from main, exit(0) */
+#endif
 	.end __start
 
 /* -------------------------------------------------------------
@@ -177,16 +184,16 @@ PutInt:
 	syscall
 	j	$31
 	.end PutInt
-    
-    .globl UserThreadCreate
+
+	.globl UserThreadCreate
 	.ent   UserThreadCreate
 UserThreadCreate:
 	addiu $2,$0, SC_UserThreadCreate
 	syscall
 	j	$31
 	.end UserThreadCreate
-    
-    .globl UserThreadExit
+
+	.globl UserThreadExit
 	.ent   UserThreadExit
 UserThreadExit:
 	addiu $2,$0, SC_UserThreadExit

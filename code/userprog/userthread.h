@@ -5,14 +5,12 @@
 struct struct_user_thread
 {
     int f;
-    int arg;  
+    int arg;
 };
 
 int do_UserThreadCreate(int f, int arg);
 
-int do_UserThreadExit();
-
-//void UserThreadExit();
+void do_UserThreadExit();
 
 void StartUserThread(int f);
 

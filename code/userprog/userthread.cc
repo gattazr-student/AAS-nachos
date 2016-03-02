@@ -18,8 +18,8 @@ int do_UserThreadCreate(int f, int arg) {
     }
     else
         return -1;
-
-    return 0;
+        
+    return new_tId;
 }
 
 int do_UserThreadExit() {

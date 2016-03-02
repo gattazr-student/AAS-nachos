@@ -168,26 +168,30 @@ do_system_call(int syscallNum)
             synchconsole->SynchPutInt(i);
         }
         break;
-        
+
     case SC_UserThreadCreate:
         {
             int ptr;
             int arg;
+            int newThreadId;
             DEBUG('a', "UserThreadCreate syscall.\n");
             ptr = (int)machine->ReadRegister(4);
             arg = (int)machine->ReadRegister(5);
-            
-            if (do_UserThreadCreate(ptr, arg) == -1) {
-                printf ("Unable to create user thread %d\n", syscallNum);
-                ASSERT (FALSE);
+            newThreadId = do_UserThreadCreate(ptr, arg);
+            if ( newThreadId == -1) {
+                printf("Creation of new user thread failed.\n");
+                ASSERT(FALSE);
+            }else{
+                /* Return the new thread id */
+                machine->WriteRegister(2, newThreadId);
             }
         }
         break;
-        
+
     case SC_UserThreadExit:
         {
             DEBUG('a', "UserThreadExit syscall.\n");
-            
+
             do_UserThreadExit();
         }
         break;
