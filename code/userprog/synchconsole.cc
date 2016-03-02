@@ -15,33 +15,55 @@ SynchConsole::SynchConsole(char *readFile, char *writeFile)
     readAvail = new Semaphore("read avail", 0);
     writeDone = new Semaphore("write done", 0);
     console = new Console(readFile, writeFile, ReadAvail, WriteDone, 0);
+
+    semRead = new Semaphore("console read avail", 1);
+    semWrite = new Semaphore("console write avail", 1);
 }
 SynchConsole::~SynchConsole()
 {
     delete console;
     delete writeDone;
     delete readAvail;
+
+    delete semRead;
+    delete semWrite;
 }
 
 void SynchConsole::SynchPutChar(const char ch)
 {
+    semWrite->P();
     console->PutChar(ch);	// echo it!
     writeDone->P();	// wait for write to finish
+    semWrite->V();
 }
 
 int SynchConsole::SynchGetChar()
 {
-    readAvail->P(); // wait for character to arrive
+    int c;
+    semRead->P();
+    DEBUG('D', "GET CHAR");
 
-    return (console->Feof())? EOF : (int)console->GetChar();
+    // ReadChar
+    readAvail->P(); // wait for character to arrive
+    c = (console->Feof())? EOF : (int)console->GetChar();
+
+    semRead->V();
+    return c;
 }
 
 void SynchConsole::SynchPutString(const char s[])
 {
     int i;
+    semWrite->P();
+
+    // PutString
     for(i=0; s[i]!='\0'; i++) {
-        this->SynchPutChar(s[i]);
+        // PutChar
+        console->PutChar(s[i]);	// echo it!
+        writeDone->P();	// wait for write to finish
     }
+
+    semWrite->V();
 }
 
 /**
@@ -51,8 +73,13 @@ void SynchConsole::SynchPutString(const char s[])
 void SynchConsole::SynchGetString(char *s, int n)
 {
     int i = 0;
-    while( i < n-1) {
-        s[i] = this->SynchGetChar();
+    semRead->P();
+
+    // GetString
+    while(i < n-1) {
+        // GetChar
+        readAvail->P();
+        s[i] = (console->Feof())? EOF : (int)console->GetChar();;
 
         /* We stop reading at \n or EOF */
         if(s[i] == '\n'){
@@ -65,6 +92,8 @@ void SynchConsole::SynchGetString(char *s, int n)
         i++;
     }
     s[i] = '\0';
+
+    semRead->V();
 }
 
 void SynchConsole::SynchPutInt(int i){

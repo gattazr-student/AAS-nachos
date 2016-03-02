@@ -4,6 +4,8 @@
 #include "copyright.h"
 #include "utility.h"
 #include "console.h"
+#include "synch.h"
+
 class SynchConsole {
     public:
         /* initialize the hardware console device */
@@ -23,6 +25,8 @@ class SynchConsole {
         void SynchGetInt(int *i);
     private:
         Console *console;
+        Semaphore *semRead; // Semaphore to prevent concurrent reading
+        Semaphore *semWrite; // Semaphore to prevent concurrent writting
 };
 #endif
 #endif
