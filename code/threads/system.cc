@@ -199,6 +199,7 @@ Cleanup ()
 
 #ifdef CHANGED
     delete synchconsole;
+    delete threadbitmap;
 #endif
 #endif
 
