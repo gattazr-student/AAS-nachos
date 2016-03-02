@@ -64,6 +64,11 @@ Interrupt::Interrupt()
     inHandler = FALSE;
     yieldOnReturn = FALSE;
     status = SystemMode;
+    
+#ifdef CHANGED
+    haltCond = new Condition("condThreads");
+    haltLock = new Lock("lockThreads");
+#endif
 }
 
 //----------------------------------------------------------------------
@@ -79,6 +84,11 @@ Interrupt::~Interrupt()
        delete (PendingInterrupt *)(pending->Remove());
     // End of correction
     delete pending;
+    
+#ifdef CHANGED
+    delete haltCond;
+    delete haltLock;
+#endif
 }
 
 //----------------------------------------------------------------------
@@ -243,6 +253,12 @@ Interrupt::Idle()
 void
 Interrupt::Halt()
 {
+#ifdef CHANGED
+    haltLock->Acquire();
+    while (threadbitmap->NumThreads() > 1) 
+        haltCond->Wait(haltLock);
+    haltLock->Release();
+#endif
     printf("Machine halting!\n\n");
     stats->Print();
     Cleanup();     // Never returns.
