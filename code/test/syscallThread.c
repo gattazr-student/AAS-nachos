@@ -25,9 +25,6 @@ int main() {
         i++;
     }while(i < 6);
 
-    PutString("main waiting for char\n");
-    GetChar();
     PutString("End of main\n");
-
     Halt();
 }
