@@ -43,6 +43,9 @@ PostOffice *postOffice;
 
 // External definition, to allow us to take a pointer to this function
 extern void Cleanup ();
+#ifdef CHANGED
+extern void CleanupExit ();
+#endif
 
 
 //----------------------------------------------------------------------
@@ -158,7 +161,11 @@ Initialize (int argc, char **argv)
     currentThread->setStatus (RUNNING);
 
     interrupt->Enable ();
+#ifdef CHANGED
+    CallOnUserAbort (CleanupExit);	// if user hits ctl-C
+#else
     CallOnUserAbort (Cleanup);	// if user hits ctl-C
+#endif
 
 #ifdef USER_PROGRAM
     machine = new Machine (debugUserProg);	// this must come first
@@ -215,5 +222,22 @@ Cleanup ()
     delete scheduler;
     delete interrupt;
 
+#ifndef CHANGED
+    // Cleanup doesn't exit on CHANGED version
     Exit (0);
+#endif
 }
+
+
+#ifdef CHANGED
+//----------------------------------------------------------------------
+// CleanupExit
+//      Nachos is halting.  De-allocate global data structures and exit(1)
+//----------------------------------------------------------------------
+void
+CleanupExit ()
+{
+    Cleanup();
+    Exit (1);
+}
+#endif

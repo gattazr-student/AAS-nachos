@@ -255,13 +255,18 @@ Interrupt::Halt()
 {
 #ifdef CHANGED
     haltLock->Acquire();
-    while (threadbitmap->NumThreads() > 1) 
+    while (threadbitmap->NumThreads() > 1)
         haltCond->Wait(haltLock);
     haltLock->Release();
 #endif
+
     printf("Machine halting!\n\n");
     stats->Print();
     Cleanup();     // Never returns.
+
+#ifdef CHANGED
+	Exit(0);
+#endif
 }
 
 //----------------------------------------------------------------------
