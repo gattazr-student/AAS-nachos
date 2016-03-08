@@ -2,32 +2,28 @@
 #include "stdio.h"
 
 void test(void* arg) {
-    //PutString("test\n");
-    //PutInt(*((int*)arg));
+    PutInt(*((int*)arg));
+    PutString("test\n");
     int a = *((int*)arg);
     int i;
     for (i=0; i < 1000*a;)
         i=i+1;
-    
-    //PutString("exiting\n");
-    //PutInt(*((int*)arg));
+
+    PutInt(*((int*)arg));
+    PutString("exiting\n");
     UserThreadExit();
 }
 
 int main() {
-    //PutString("Début du main\n");
     int i;
-    int b = 1;
-    for (i=0; i < 5; i++)
-        UserThreadCreate(test, &b);
-    
-    //int a = 1;
-   // int b = 2;
-    int c = 300;
-    
-    //UserThreadCreate(test, &b);
-    UserThreadCreate(test, &c);
-   
-    //PutString("Fin du main\n");
-    Halt();
+    int c[4];
+    PutString("Début du main\n");
+
+    // Loop creating 4 threads
+    for (i=0; i < 5; i++){
+        c[i] = 100+i;
+        UserThreadCreate(test, &(c[i]));
+    }
+
+    return 2;
 }
