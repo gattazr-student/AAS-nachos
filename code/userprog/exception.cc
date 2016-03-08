@@ -201,7 +201,12 @@ do_system_call(int syscallNum)
             int exitValue;
             DEBUG ('a', "Exit syscall.");
             exitValue = (int)machine->ReadRegister(4);
-            Exit(exitValue);
+            // Do Exit or Halt if thread main (id=0)
+            if(currentThread->getId() == 0){
+                interrupt->Halt(exitValue);
+            }else{
+                Exit(exitValue);
+            }
         }
         break;
 

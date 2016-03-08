@@ -1,4 +1,4 @@
-// interrupt.h 
+// interrupt.h
 //	Data structures to emulate low-level interrupt hardware.
 //
 //	The hardware provides a routine (SetLevel) to enable or disable
@@ -92,7 +92,11 @@ class Interrupt {
 					// simulated time forward until the
 					// next interrupt
 
-    void Halt(); 			// quit and print out stats
+	#ifdef CHANGED
+		void Halt(int exitCode=0); 	// quit and print out stats
+	#else
+		void Halt(); // quit and print out stats
+	#endif
 
     void YieldOnReturn();		// cause a context switch on return
 					// from an interrupt handler
