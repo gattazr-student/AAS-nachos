@@ -3,15 +3,15 @@
 
 void test(void* arg) {
     PutInt(*((int*)arg));
-    PutString("test\n");
+    PutString(" - beginning\n");
     int a = *((int*)arg);
     int i;
     for (i=0; i < 1000*a;)
         i=i+1;
 
     PutInt(*((int*)arg));
-    PutString("exiting\n");
-    UserThreadExit();
+    PutString(" - exiting\n");
+    // UserThreadExit();
 }
 
 int main() {
@@ -25,5 +25,6 @@ int main() {
         UserThreadCreate(test, &(c[i]));
     }
 
+    // Halt();
     return 2;
 }
