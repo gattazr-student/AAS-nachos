@@ -185,10 +185,12 @@ PutInt:
 	j	$31
 	.end PutInt
 
+    /* Add a param to to use UserThreadExit as callback */
 	.globl UserThreadCreate
 	.ent   UserThreadCreate
 UserThreadCreate:
 	addiu $2,$0, SC_UserThreadCreate
+    addiu $6,$0, UserThreadExit
 	syscall
 	j	$31
 	.end UserThreadCreate

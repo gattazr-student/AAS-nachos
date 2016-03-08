@@ -173,11 +173,13 @@ do_system_call(int syscallNum)
         {
             int ptr;
             int arg;
+            int fCallback;
             int newThreadId;
             DEBUG('a', "UserThreadCreate syscall.\n");
             ptr = (int)machine->ReadRegister(4);
             arg = (int)machine->ReadRegister(5);
-            newThreadId = do_UserThreadCreate(ptr, arg);
+            fCallback = (int)machine->ReadRegister(6);
+            newThreadId = do_UserThreadCreate(ptr, arg, fCallback);
             if ( newThreadId == -1) {
                 printf("Creation of new user thread failed.\n");
                 ASSERT(FALSE);

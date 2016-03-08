@@ -4,7 +4,7 @@
 #include "userthread.h"
 
 
-int do_UserThreadCreate(int f, int arg) {
+int do_UserThreadCreate(int f, int arg, int callback) {
 
     int new_tId = threadbitmap->Find();
     if (new_tId > 0) {
@@ -13,12 +13,13 @@ int do_UserThreadCreate(int f, int arg) {
         struct struct_user_thread* args = new (struct struct_user_thread)();
         args->f = f;
         args->arg = arg;
+        args->callback = callback;
 
         newThread->Fork(StartUserThread, (int)(args));
     }
     else
         return -1;
-        
+
     return new_tId;
 }
 
@@ -43,9 +44,10 @@ void StartUserThread(int f) {
     unsigned int regdpl = currentThread->getId()*PageThread*PageSize;
     machine->WriteRegister(StackReg, currentThread->space->getNumPages()*PageSize - regdpl - 16);
 
-    machine->WriteRegister(PCReg, args->f);
-    machine->WriteRegister(NextPCReg, args->f + 4);
-    machine->WriteRegister(4, args->arg);
+    machine->WriteRegister(PCReg, args->f); // PC
+    machine->WriteRegister(NextPCReg, args->f + 4); // next PC
+    machine->WriteRegister(4, args->arg); // R4 (arg)
+    machine->WriteRegister(RetAddrReg, args->callback); // callback
 
     delete args;
 

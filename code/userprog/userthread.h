@@ -6,9 +6,10 @@ struct struct_user_thread
 {
     int f;
     int arg;
+    int callback;
 };
 
-int do_UserThreadCreate(int f, int arg);
+int do_UserThreadCreate(int f, int arg, int callback);
 
 int do_UserThreadExit();
 
