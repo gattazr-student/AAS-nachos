@@ -1,4 +1,4 @@
-// interrupt.cc 
+// interrupt.cc
 //	Routines to simulate hardware interrupts.
 //
 //	The hardware provides a routine (SetLevel) to enable or disable
@@ -64,7 +64,7 @@ Interrupt::Interrupt()
     inHandler = FALSE;
     yieldOnReturn = FALSE;
     status = SystemMode;
-    
+
 #ifdef CHANGED
     haltCond = new Condition("condThreads");
     haltLock = new Lock("lockThreads");
@@ -84,7 +84,7 @@ Interrupt::~Interrupt()
        delete (PendingInterrupt *)(pending->Remove());
     // End of correction
     delete pending;
-    
+
 #ifdef CHANGED
     delete haltCond;
     delete haltLock;
@@ -250,24 +250,30 @@ Interrupt::Idle()
 // Interrupt::Halt
 // 	Shut down Nachos cleanly, printing out performance statistics.
 //----------------------------------------------------------------------
-void
-Interrupt::Halt()
-{
 #ifdef CHANGED
+void
+Interrupt::Halt(int exitCode)
+{
     haltLock->Acquire();
     while (threadbitmap->NumThreads() > 1)
         haltCond->Wait(haltLock);
     haltLock->Release();
-#endif
 
     printf("Machine halting!\n\n");
     stats->Print();
-    Cleanup();     // Never returns.
 
-#ifdef CHANGED
-	Exit(0);
-#endif
+	Cleanup();
+	Exit(exitCode);
 }
+#else
+void
+Interrupt::Halt()
+{
+    printf("Machine halting!\n\n");
+    stats->Print();
+    Cleanup();     // Never returns.
+}
+#endif
 
 //----------------------------------------------------------------------
 // Interrupt::Schedule
