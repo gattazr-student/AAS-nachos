@@ -197,14 +197,30 @@ do_system_call(int syscallNum)
             do_UserThreadExit();
         }
         break;
+    case SC_UserThreadJoin:
+        {
+            int tId;
+            int rval;
+            DEBUG('D', "UserThreadJoin syscall.\n");
 
+            tId = (int)machine->ReadRegister(4);
+            rval = do_UserThreadJoin(tId);
+            
+            if (rval == 0) {
+                DEBUG('D', "UserThread has already finished.\n");
+            }
+            else {
+                DEBUG('D', "UserThread joined.\n");
+            }
+        }
+        break;
     case SC_Exit:
         {
             int exitValue;
             DEBUG ('a', "Exit syscall.");
             exitValue = (int)machine->ReadRegister(4);
             // Do Exit or Halt if thread main (id=0)
-            if(currentThread->getId() == 0){
+            if(Thread::get_tId(currentThread->getId()) == 0){
                 interrupt->Halt(exitValue);
             }else{
                 Exit(exitValue);

@@ -7,8 +7,10 @@
 int do_UserThreadCreate(int f, int arg, int callback) {
 
     int new_tId = threadbitmap->Find();
+    
+    Thread* newThread;
     if (new_tId > 0) {
-        Thread* newThread = new Thread ("slave", new_tId);
+        newThread = new Thread ("slave", new_tId);
 
         struct struct_user_thread* args = new (struct struct_user_thread)();
         args->f = f;
@@ -20,17 +22,29 @@ int do_UserThreadCreate(int f, int arg, int callback) {
     else
         return -1;
 
-    return new_tId;
+    return newThread->getId();
 }
 
 int do_UserThreadExit() {
     // Clear the bitmap
-    threadbitmap->Clear(currentThread->getId());
+    threadbitmap->Clear(Thread::get_tId(currentThread->getId()));
 
     // Kill the thread
     currentThread->Finish();
 
     return 0;
+}
+
+int do_UserThreadJoin(int Id) {
+    int tId = Thread::get_tId(Id);
+    if (threadbitmap->Test(tId))
+        return -1; //No need to join, thread already dead
+    
+    if (currentThread->space->joinSemaphoreList[tId]->getId() == Thread::get_sId(Id))
+        currentThread->space->joinSemaphoreList[tId]->P();
+        return 0; //Ok
+    
+    return -2; //Thread is dead and replaced
 }
 
 void StartUserThread(int f) {
@@ -41,7 +55,7 @@ void StartUserThread(int f) {
     currentThread->space->InitRegisters();
     currentThread->space->RestoreState();
 
-    unsigned int regdpl = currentThread->getId()*PageThread*PageSize;
+    unsigned int regdpl = Thread::get_tId(currentThread->getId())*PageThread*PageSize;
     machine->WriteRegister(StackReg, currentThread->space->getNumPages()*PageSize - regdpl - 16);
 
     machine->WriteRegister(PCReg, args->f); // PC

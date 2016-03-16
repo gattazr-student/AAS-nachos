@@ -194,6 +194,16 @@ UserThreadCreate:
 	syscall
 	j	$31
 	.end UserThreadCreate
+    
+	.globl UserThreadJoin
+	.ent   UserThreadJoin
+UserThreadJoin:
+	addiu $2,$0, SC_UserThreadJoin
+    /* addiu $6,$0, UserThreadExit */
+	syscall
+	j	$31
+	.end UserThreadJoin
+
 
 	.globl UserThreadExit
 	.ent   UserThreadExit

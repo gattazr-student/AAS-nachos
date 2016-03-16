@@ -13,6 +13,8 @@ int do_UserThreadCreate(int f, int arg, int callback);
 
 int do_UserThreadExit();
 
+int do_UserThreadJoin(int Id);
+
 void StartUserThread(int f);
 
 #endif
