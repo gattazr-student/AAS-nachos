@@ -1,5 +1,4 @@
 #include "syscall.h"
-#include "stdio.h"
 
 void son(void *arg) {
     char c;

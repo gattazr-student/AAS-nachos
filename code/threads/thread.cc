@@ -448,7 +448,7 @@ int Thread::get_sId(int Id)
 {
     unsigned int mask = -1;
     mask = mask << (int)(ceil(log2(MaxNumThread)));
-    
-    return (Id & mask);
+    Id = (Id & mask) >> (int)(ceil(log2(MaxNumThread)));
+    return Id;
 }
 #endif

@@ -37,12 +37,14 @@ int do_UserThreadExit() {
 
 int do_UserThreadJoin(int Id) {
     int tId = Thread::get_tId(Id);
-    if (threadbitmap->Test(tId))
+
+    if (!threadbitmap->Test(tId))
         return -1; //No need to join, thread already dead
-    
-    if (currentThread->space->joinSemaphoreList[tId]->getId() == Thread::get_sId(Id))
+
+    if (currentThread->space->joinSemaphoreList[tId]->getId() == Thread::get_sId(Id)) {
         currentThread->space->joinSemaphoreList[tId]->P();
         return 0; //Ok
+    }
     
     return -2; //Thread is dead and replaced
 }
