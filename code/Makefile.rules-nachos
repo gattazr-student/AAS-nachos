@@ -23,6 +23,9 @@ vpath %.cc $(call buildvpath,machine threads userprog filesys network vm)
 vpath %.S $(call buildvpath,machine threads userprog filesys network vm)
 vpath %.c $(topsrc_dir)/test
 vpath %.S $(topsrc_dir)/test
+vpath %.c $(topsrc_dir)/test/thread
+vpath %.c $(topsrc_dir)/test/synchconsole
+vpath %.c $(topsrc_dir)/test/syscall
 
 all:
 .PHONY: all

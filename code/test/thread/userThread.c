@@ -1,5 +1,4 @@
 #include "syscall.h"
-#include "stdio.h"
 
 void test(void * arg) {
     PutString("test\n");
