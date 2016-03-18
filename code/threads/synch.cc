@@ -35,6 +35,11 @@
 
 Semaphore::Semaphore (const char *debugName, int initialValue)
 {
+#ifdef CHANGED
+    static int compteur = -1;
+    compteur ++;
+    s_Id = compteur;
+#endif
     name = debugName;
     value = initialValue;
     queue = new List;
@@ -97,6 +102,24 @@ Semaphore::V ()
     value++;
     (void) interrupt->SetLevel (oldLevel);
 }
+
+#ifdef CHANGED
+void
+Semaphore::VAll ()
+{
+    Thread *thread;
+    IntStatus oldLevel = interrupt->SetLevel (IntOff);
+
+    do {
+        thread = (Thread *) queue->Remove ();
+        if (thread != NULL)
+            scheduler->ReadyToRun (thread);
+        value++;
+    } while (thread != NULL);
+    
+    (void) interrupt->SetLevel (oldLevel);
+}
+#endif
 
 // Dummy functions -- so we can compile our later assignments
 // Note -- without a correct implementation of Condition::Wait(),

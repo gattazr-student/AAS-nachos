@@ -39,6 +39,7 @@
 #define SC_PutInt         16
 #define SC_UserThreadCreate      17
 #define SC_UserThreadExit        18
+#define SC_UserThreadJoin        19
 #endif
 
 #ifdef IN_USER_MODE
@@ -180,6 +181,12 @@ int UserThreadCreate(void f(void *arg), void *arg);
  * exit a user thread
  */
 void UserThreadExit();
+
+/** 
+ * join the current thread to the one with tId as identifier
+ * return 0 if the thread was already over
+ */
+int UserThreadJoin(int tId);
 
 #endif
 

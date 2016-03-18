@@ -92,8 +92,12 @@ do_system_call(int syscallNum)
 
     switch(syscallNum){
     case SC_Halt:
-        DEBUG ('a', "Shutdown, initiated by user program.\n");
-        interrupt->Halt ();
+        {
+            int exitCode;
+            DEBUG ('a', "Shutdown, initiated by user program.\n");
+            exitCode = machine->ReadRegister(4);
+            interrupt->Halt(exitCode);
+        }
         break;
 
     case SC_GetChar:
@@ -197,18 +201,29 @@ do_system_call(int syscallNum)
             do_UserThreadExit();
         }
         break;
+    case SC_UserThreadJoin:
+        {
+            int tId;
+            int rval;
+            DEBUG('D', "UserThreadJoin syscall.\n");
 
+            tId = (int)machine->ReadRegister(4);
+            rval = do_UserThreadJoin(tId);
+
+            if (rval == 0) {
+                DEBUG('D', "UserThread has already finished.\n");
+            }
+            else {
+                DEBUG('D', "UserThread joined.\n");
+            }
+        }
+        break;
     case SC_Exit:
         {
             int exitValue;
             DEBUG ('a', "Exit syscall.");
             exitValue = (int)machine->ReadRegister(4);
-            // Do Exit or Halt if thread main (id=0)
-            if(currentThread->getId() == 0){
-                interrupt->Halt(exitValue);
-            }else{
-                Exit(exitValue);
-            }
+            Exit(exitValue);
         }
         break;
 

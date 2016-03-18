@@ -20,6 +20,8 @@
 #include "synch.h"
 #include "system.h"
 
+#include <math.h>
+
 #define STACK_FENCEPOST 0xdeadbeef	// this is put at the top of the
 					// execution stack, for detecting
 					// stack overflows
@@ -34,7 +36,7 @@
 #ifdef CHANGED
 Thread::Thread (const char *threadName, int threadId)
 {
-    this->tId = threadId;
+    this->Id = threadId;
 #else
 Thread::Thread (const char *threadName)
 {
@@ -111,7 +113,12 @@ Thread::Fork (VoidFunctionPtr func, int arg)
 
     // LB: Observe that currentThread->space may be NULL at that time.
     this->space = currentThread->space;
-
+    #ifdef CHANGED
+        ASSERT(this->space->joinSemaphoreList[Id] == NULL);
+        Semaphore* sem = new Semaphore("joinSem", 0);
+        this->space->joinSemaphoreList[Id] = sem;
+        Id = create_Id(Id, sem->getId());
+    #endif
 #endif // USER_PROGRAM
 
     IntStatus oldLevel = interrupt->SetLevel (IntOff);
@@ -177,7 +184,11 @@ Thread::Finish ()
 
     threadToBeDestroyed = currentThread;
     #ifdef CHANGED
+        int tId = get_tId(Id);
         interrupt->haltCond->Signal(interrupt->haltLock);
+        this->space->joinSemaphoreList[tId]->VAll();
+        delete this->space->joinSemaphoreList[tId];
+        this->space->joinSemaphoreList[tId] = NULL;
     #endif
     Sleep ();			// invokes SWITCH
     // not reached
@@ -415,5 +426,29 @@ Thread::RestoreUserState ()
 {
     for (int i = 0; i < NumTotalRegs; i++)
 	machine->WriteRegister (i, userRegisters[i]);
+}
+#endif
+
+#ifdef CHANGED
+int Thread::create_Id(int t_Id, int s_Id) 
+{
+    s_Id = s_Id << (int)(ceil(log2(MaxNumThread)));
+    return s_Id + t_Id;
+}
+
+int Thread::get_tId(int Id) 
+{
+    unsigned int mask = -1;
+    mask = mask << (int)(ceil(log2(MaxNumThread)));
+    
+    return (Id & ~mask);
+}
+
+int Thread::get_sId(int Id) 
+{
+    unsigned int mask = -1;
+    mask = mask << (int)(ceil(log2(MaxNumThread)));
+    Id = (Id & mask) >> (int)(ceil(log2(MaxNumThread)));
+    return Id;
 }
 #endif

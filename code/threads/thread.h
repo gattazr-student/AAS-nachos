@@ -40,6 +40,12 @@
 #include "copyright.h"
 #include "utility.h"
 
+#ifdef CHANGED
+#define PageThread 3
+#define MaxNumThread 10
+class AddrSpace;
+#endif
+
 #ifdef USER_PROGRAM
 #include "machine.h"
 #include "addrspace.h"
@@ -49,10 +55,6 @@
 // The SPARC and MIPS only need 10 registers, but the Snake needs 18.
 // For simplicity, this is just the max over all architectures.
 #define MachineStateSize 18
-#ifdef CHANGED
-#define PageThread 3
-#define MaxNumThread 10
-#endif
 
 // Size of the thread's private execution stack.
 // WATCH OUT IF THIS ISN'T BIG ENOUGH!!!!!
@@ -79,18 +81,25 @@ extern void ThreadPrint (int arg);
 
 class Thread
 {
+#ifdef CHANGED
+  public:
+    static int create_Id(int t_Id, int s_Id);
+    static int get_tId(int Id);
+    static int get_sId(int Id);
+#endif
   private:
     // NOTE: DO NOT CHANGE the order of these first two members.
     // THEY MUST be in this position for SWITCH to work.
     int *stackTop;		// the current stack pointer
     int machineState[MachineStateSize];	// all registers except for stackTop
 #ifdef CHANGED
-    int tId;
+    int Id;
 #endif
 
   public:
 #ifdef CHANGED
-    int getId() {return tId;}
+    int getId() {return Id;}
+    
     Thread (const char *debugName, int threadId = 0);	// initialize a Thread
 #else
     Thread (const char *debugName);	// initialize a Thread

@@ -17,6 +17,11 @@
 #include "filesys.h"
 
 #ifdef CHANGED
+class Semaphore;
+#include "thread.h"
+#endif
+
+#ifdef CHANGED
 #define UserStackSize		MaxNumThread*PageThread*PageSize	// increase this as necessary!
 #else
 #define UserStackSize		1024	// increase this as necessary!
@@ -43,8 +48,9 @@ class AddrSpace
     // address space
     
 #ifdef CHANGED
-   public:
+  public:
     unsigned int getNumPages() {return numPages;}
+    Semaphore* joinSemaphoreList[MaxNumThread];
 #endif
 };
 
