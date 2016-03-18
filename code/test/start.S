@@ -25,10 +25,12 @@
 __start:
 	jal	main
 #ifdef CHANGED
-	/* if we return from main, exit(returnedValue) */
+	/* if we return from main, Halt(returnedValue) */
 	/* The returned value is in r2 */
-	move	$4,$2
-	jal	Exit
+    move $4,$2
+    addiu $2,$0,SC_Halt
+	syscall
+    j $31
 #else
 	move	$4,$0
 	jal	Exit	 /* if we return from main, exit(0) */
@@ -52,6 +54,7 @@ __start:
 	.ent	Halt
 Halt:
 	addiu $2,$0,SC_Halt
+    move $4,$0 # Force default Halt(0)
 	syscall
 	j	$31
 	.end Halt
@@ -194,7 +197,7 @@ UserThreadCreate:
 	syscall
 	j	$31
 	.end UserThreadCreate
-    
+
 	.globl UserThreadJoin
 	.ent   UserThreadJoin
 UserThreadJoin:
