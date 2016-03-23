@@ -34,6 +34,10 @@ StartProcess (char *filename)
 	  printf ("Unable to open file %s\n", filename);
 	  return;
       }
+#ifdef CHANGED
+    /* Create the SynchConsole if program is about to be run */
+    synchconsole = new SynchConsole(NULL, NULL);
+#endif
     space = new AddrSpace (executable);
     currentThread->space = space;
 

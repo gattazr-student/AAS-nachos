@@ -193,10 +193,6 @@ Thread::Finish ()
         delete this->space->joinSemaphoreList[tId];
         this->space->joinSemaphoreList[tId] = NULL;
     }
-    if(tId == 0){
-        // If it is the main thread
-        interrupt->Halt();
-    }
 #endif
 #endif
 
