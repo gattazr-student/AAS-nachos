@@ -41,7 +41,6 @@ int SynchConsole::SynchGetChar()
 {
     int c;
     semRead->P();
-    DEBUG('D', "GET CHAR");
 
     // ReadChar
     readAvail->P(); // wait for character to arrive
