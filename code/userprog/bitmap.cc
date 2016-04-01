@@ -19,6 +19,9 @@
 
 BitMap::BitMap (int nitems)
 {
+#ifdef CHANGED
+    sem = new Semaphore("sem",0);
+#endif
     numBits = nitems;
     numWords = divRoundUp (numBits, BitsInWord);
     map = new unsigned int[numWords];
@@ -36,6 +39,9 @@ BitMap::~BitMap ()
   // LB: Missing [] in delete directive
   //  delete map;
   delete [] map;
+#ifdef CHANGED
+    delete sem;
+#endif
   // End of modification
 }
 
@@ -49,9 +55,30 @@ BitMap::~BitMap ()
 void
 BitMap::Mark (int which)
 {
+#ifdef CHANGED
+    sem->P();
+    MarkUnSecu(which);
+    sem->V();
+#else
+    ASSERT (which >= 0 && which < numBits);
+    map[which / BitsInWord] |= 1 << (which % BitsInWord);
+#endif
+}
+
+//----------------------------------------------------------------------
+// BitMap::Set
+//      Set the "nth" bit in a bitmap.
+//
+//      "which" is the number of the bit to be set.
+//----------------------------------------------------------------------
+#ifdef CHANGED
+void
+BitMap::MarkUnSecu (int which)
+{
     ASSERT (which >= 0 && which < numBits);
     map[which / BitsInWord] |= 1 << (which % BitsInWord);
 }
+#endif
 
 //----------------------------------------------------------------------
 // BitMap::Clear
@@ -63,8 +90,14 @@ BitMap::Mark (int which)
 void
 BitMap::Clear (int which)
 {
+#ifdef CHANGED
+    sem->P();
+#endif
     ASSERT (which >= 0 && which < numBits);
     map[which / BitsInWord] &= ~(1 << (which % BitsInWord));
+#ifdef CHANGED
+    sem->V();
+#endif
 }
 
 //----------------------------------------------------------------------
@@ -97,13 +130,23 @@ BitMap::Test (int which)
 int
 BitMap::Find ()
 {
+#ifdef CHANGED
+    sem->P();
+#endif
     for (int i = 0; i < numBits; i++)
 	if (!Test (i))
 	  {
-	      Mark (i);
+#ifdef CHANGED
+	      MarkUnSecu (i);
+#else
+          Mark (i);
+#endif
 	      return i;
 	  }
     return -1;
+#ifdef CHANGED
+    sem->V();
+#endif
 }
 
 //----------------------------------------------------------------------
@@ -125,7 +168,7 @@ BitMap::NumClear ()
 
 #ifdef CHANGED
 int
-BitMap::NumThreads () 
+BitMap::NumMarked () 
 {
     return numBits - NumClear();
 }
@@ -176,3 +219,37 @@ BitMap::WriteBack (OpenFile * file)
 {
     file->WriteAt ((char *) map, numWords * sizeof (unsigned), 0);
 }
+
+#ifdef CHANGED
+int
+BitMap::Alea ()
+{
+    printf("befor\n");
+    sem->P();
+    printf("after\n");
+    int i;
+    int j=0;
+    i = Random()%numBits;
+    while(Test(i)&& j<3){
+        i = Random()%numBits;
+        j++;
+    }
+    if(!Test(i)){
+        MarkUnSecu(i);
+        return i;
+    }else{
+        i= Random()%NumClear();
+        j=0;
+        int k = 0;
+        while(j<i){
+            if(!Test(k)){
+                j++;
+            }
+            k++;
+        }
+        MarkUnSecu(k);
+        return(k);
+    }
+    sem->V();
+}
+#endif

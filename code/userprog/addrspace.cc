@@ -83,6 +83,7 @@ SwapHeader (NoffHeader * noffH)
 
 AddrSpace::AddrSpace (OpenFile * executable)
 {
+  DEBUG ('k', "Début addrspasce\n");
     NoffHeader noffH;
     unsigned int i, size;
 
@@ -109,8 +110,14 @@ AddrSpace::AddrSpace (OpenFile * executable)
     pageTable = new TranslationEntry[numPages];
     for (i = 0; i < numPages; i++)
       {
-	  pageTable[i].virtualPage = i;	// for now, virtual page # = phys page #
-	  pageTable[i].physicalPage = i+1;
+      pageTable[i].virtualPage = i; // for now, virtual page # = phys page #
+
+#ifdef CHANGED
+      DEBUG ('k', "Prout de popek\n");
+      pageTable[i].physicalPage = frameprovider->GetEmptyFrame();
+#else
+    	pageTable[i].physicalPage = i;
+#endif
 	  pageTable[i].valid = TRUE;
 	  pageTable[i].use = FALSE;
 	  pageTable[i].dirty = FALSE;
@@ -153,6 +160,13 @@ AddrSpace::~AddrSpace ()
 {
   // LB: Missing [] for delete
   // delete pageTable;
+#ifdef CHANGED
+  unsigned int i;
+  for (i = 0; i < numPages; i++){
+    frameprovider->ReleaseFrame(pageTable[i].physicalPage);
+  }
+#endif
+
   delete [] pageTable;
   // End of modification
 }

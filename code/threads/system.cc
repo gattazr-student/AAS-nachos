@@ -33,6 +33,7 @@ Machine *machine;		// user program memory and registers
 #ifdef CHANGED
 SynchConsole *synchconsole;
 BitMap *threadbitmap;
+FrameProvider *frameprovider;
 #endif
 #endif
 
@@ -173,6 +174,8 @@ Initialize (int argc, char **argv)
     synchconsole = new SynchConsole(NULL, NULL);
     threadbitmap = new BitMap(MaxNumThread); // Initialisation de la bitmap des threads
     threadbitmap->Mark(0); // thread principal
+
+    frameprovider = new FrameProvider(NumPhysPages);
 #endif
 #endif
 
