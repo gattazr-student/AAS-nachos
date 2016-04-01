@@ -171,7 +171,6 @@ Initialize (int argc, char **argv)
 #ifdef USER_PROGRAM
     machine = new Machine (debugUserProg);	// this must come first
 #ifdef CHANGED
-    synchconsole = new SynchConsole(NULL, NULL);
     threadbitmap = new BitMap(MaxNumThread); // Initialisation de la bitmap des threads
     threadbitmap->Mark(0); // thread principal
 

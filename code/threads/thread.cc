@@ -1,4 +1,4 @@
-// thread.cc 
+// thread.cc
 //      Routines to manage threads.  There are four main operations:
 //
 //      Fork -- create a thread to run a procedure concurrently
@@ -183,13 +183,19 @@ Thread::Finish ()
     // End of addition
 
     threadToBeDestroyed = currentThread;
-    #ifdef CHANGED
-        int tId = get_tId(Id);
+
+#ifdef USER_PROGRAM
+#ifdef CHANGED
+    int tId = get_tId(Id);
+    if(this->space != NULL && this->space->joinSemaphoreList[tId] != NULL){
         interrupt->haltCond->Signal(interrupt->haltLock);
         this->space->joinSemaphoreList[tId]->VAll();
         delete this->space->joinSemaphoreList[tId];
         this->space->joinSemaphoreList[tId] = NULL;
-    #endif
+    }
+#endif
+#endif
+
     Sleep ();			// invokes SWITCH
     // not reached
 }
@@ -430,21 +436,21 @@ Thread::RestoreUserState ()
 #endif
 
 #ifdef CHANGED
-int Thread::create_Id(int t_Id, int s_Id) 
+int Thread::create_Id(int t_Id, int s_Id)
 {
     s_Id = s_Id << (int)(ceil(log2(MaxNumThread)));
     return s_Id + t_Id;
 }
 
-int Thread::get_tId(int Id) 
+int Thread::get_tId(int Id)
 {
     unsigned int mask = -1;
     mask = mask << (int)(ceil(log2(MaxNumThread)));
-    
+
     return (Id & ~mask);
 }
 
-int Thread::get_sId(int Id) 
+int Thread::get_sId(int Id)
 {
     unsigned int mask = -1;
     mask = mask << (int)(ceil(log2(MaxNumThread)));
