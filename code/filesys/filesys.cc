@@ -1,4 +1,4 @@
-// filesys.cc 
+// filesys.cc
 //	Routines to manage the overall operation of the file system.
 //	Implements routines to map from textual file names to files.
 //
@@ -339,3 +339,68 @@ FileSystem::Print()
     delete freeMap;
     delete directory;
 }
+
+#ifdef CHANGED
+int FileSystem::CreateDirectory(char* dirName){
+    // Check new name is shorter than FileNameMaxLen
+    if(strlen(dirName) > FileNameMaxLen){
+        printf("CreateDirectory: Dir name too long");
+        return -1;
+    }
+
+    // Retrieve parent Dir
+    OpenFile *parentDirFile = directoryFile;
+    Directory *parentDir = new Directory(NumDirEntries);
+    parentDir->FetchFrom(parentDirFile);
+
+    // Check the name doesn't already exist
+    if(parentDir->Find(dirName) != -1){
+        printf("CreateDirectory: Dir already exists");
+        delete parentDirFile;
+        delete parentDir;
+        return -1;
+    }
+
+    // Take a sector for Fileheader
+    BitMap *freeMap = new BitMap(NumSectors);
+    freeMap->FetchFrom(freeMapFile);
+    int freeSector = freeMap->Find();
+    // Check it was possible to take a sector
+    if(freeSector == -1){
+        printf("CreateDirectory: No sectors available");
+        delete parentDirFile;
+        delete parentDir;
+        delete freeMap;
+        return -1;
+    }
+
+    // Create FileHeader for new dir
+    FileHeader *dirHeader = new FileHeader();
+    dirHeader->Allocate(freeMap, -1*DirectoryFileSize);
+    dirHeader->WriteBack(freeSector);
+
+    // Add new dir to parent dir
+    parentDir->Add(dirName, freeSector);
+
+    // create new Directory
+    Directory *dir = new Directory(NumDirEntries, freeSector, parentDir->Find("."));
+
+    // Create dir File and save it in new directory
+    OpenFile *dirFile = new OpenFile(freeSector);
+    dir->WriteBack(dirFile);
+
+    // Save parent modification
+    parentDir->WriteBack(parentDirFile);
+    freeMap->WriteBack(freeMapFile);
+
+
+
+    delete parentDir;
+    delete freeMap;
+    delete dirHeader;
+    delete dir;
+    delete dirFile;
+
+    return 0;
+}
+#endif

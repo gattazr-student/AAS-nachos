@@ -1,4 +1,4 @@
-// filehdr.h 
+// filehdr.h
 //	Data structures for managing a disk file header.
 //
 //	A file header describes where on disk to find the data in a file,
@@ -55,6 +55,10 @@ class FileHeader {
 					// in bytes
 
     void Print();			// Print the contents of the file.
+
+#ifdef CHANGED
+    bool idDir(){ return (numBytes < 0); }
+#endif
 
   private:
     int numBytes;			// Number of bytes in the file

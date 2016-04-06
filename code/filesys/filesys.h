@@ -1,4 +1,4 @@
-// filesys.h 
+// filesys.h
 //	Data structures to represent the Nachos file system.
 //
 //	A file system is a set of files stored on disk, organized
@@ -84,6 +84,10 @@ class FileSystem {
     void List();			// List all the files in the file system
 
     void Print();			// List all the files and their contents
+
+#ifdef CHANGED
+    int CreateDirectory(char* dirName);
+#endif
 
   private:
    OpenFile* freeMapFile;		// Bit map of free disk blocks,

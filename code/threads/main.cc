@@ -163,6 +163,13 @@ main (int argc, char **argv)
 	    {			// performance test
 		PerformanceTest ();
 	    }
+#ifdef CHANGED
+          else if (!strcmp (*argv, "-mkdir"))
+            {
+                ASSERT (argc > 1);
+                fileSystem->CreateDirectory (*(argv + 1));
+            }
+#endif
 #endif // FILESYS
 #ifdef NETWORK
 	  if (!strcmp (*argv, "-o"))

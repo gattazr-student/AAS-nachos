@@ -1,4 +1,4 @@
-// directory.cc 
+// directory.cc
 //	Routines to manage a directory of file names.
 //
 //	The directory is a table of fixed length entries; each
@@ -34,13 +34,22 @@
 //
 //	"size" is the number of entries in the directory
 //----------------------------------------------------------------------
-
+#ifdef CHANGED
+Directory::Directory(int size, int sector, int parent)
+#else
 Directory::Directory(int size)
+#endif
 {
     table = new DirectoryEntry[size];
     tableSize = size;
     for (int i = 0; i < tableSize; i++)
 	table[i].inUse = FALSE;
+
+#ifdef CHANGED
+    // Set directory '.' (current) and '..' (parent)
+    Add(".", sector);
+    Add("..", parent);
+#endif
 }
 
 //----------------------------------------------------------------------
@@ -169,9 +178,25 @@ Directory::Remove(const char *name)
 void
 Directory::List()
 {
+#ifdef CHANGED
+    for (int i = 0; i < tableSize; i++){
+        if (table[i].inUse){
+            FileHeader *hdr = new FileHeader();
+            hdr->FetchFrom(table[i].sector);
+
+            if(hdr->idDir()){
+                printf("%s/\n", table[i].name);
+            }else{
+                printf("%s\n", table[i].name);
+            }
+            delete hdr;
+        }
+    }
+#else
    for (int i = 0; i < tableSize; i++)
 	if (table[i].inUse)
 	    printf("%s\n", table[i].name);
+#endif
 }
 
 //----------------------------------------------------------------------

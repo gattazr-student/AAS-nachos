@@ -1,4 +1,4 @@
-// directory.h 
+// directory.h
 //	Data structures to manage a UNIX-like directory of file names.
 //
 //      A directory is a table of pairs: <file name, sector #>,
@@ -50,8 +50,12 @@ class DirectoryEntry {
 
 class Directory {
   public:
+#ifdef CHANGED
+    Directory(int size, int sector=1, int parent=1);
+#else
     Directory(int size); 		// Initialize an empty directory
 					// with space for "size" files
+#endif
     ~Directory();			// De-allocate the directory
 
     void FetchFrom(OpenFile *file);  	// Init directory contents from disk

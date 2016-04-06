@@ -1,4 +1,4 @@
-// filehdr.cc 
+// filehdr.cc
 //	Routines for managing the disk file header (in UNIX, this
 //	would be called the i-node).
 //
@@ -117,7 +117,7 @@ FileHeader::ByteToSector(int offset)
 int
 FileHeader::FileLength()
 {
-    return numBytes;
+    return abs(numBytes);
 }
 
 //----------------------------------------------------------------------
