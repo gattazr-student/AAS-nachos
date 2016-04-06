@@ -57,7 +57,7 @@ class FileHeader {
     void Print();			// Print the contents of the file.
 
 #ifdef CHANGED
-    bool idDir(){ return (numBytes < 0); }
+    bool isDir(){ return (numBytes < 0); }
 #endif
 
   private:

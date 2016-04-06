@@ -184,7 +184,7 @@ Directory::List()
             FileHeader *hdr = new FileHeader();
             hdr->FetchFrom(table[i].sector);
 
-            if(hdr->idDir()){
+            if(hdr->isDir()){
                 printf("%s/\n", table[i].name);
             }else{
                 printf("%s\n", table[i].name);
