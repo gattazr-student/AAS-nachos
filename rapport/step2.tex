@@ -10,6 +10,7 @@
 
 % Package pour insertion de code
 \usepackage{listings} % Insertion de code
+\usepackage{lstautogobble}
 \usepackage{graphicx} % insertion d'images
 % \usepackage{float} % Placement d'éléments
 \usepackage[dvipsnames]{xcolor} % colors
@@ -27,6 +28,7 @@
     language=C++,
     basicstyle=\normalsize, % ou ça==> basicstyle=\scriptsize,
     % upquote=true,
+    autogobble,
     aboveskip={1.5\baselineskip},
     columns=fullflexible,
     showstringspaces=false,
@@ -46,35 +48,502 @@
 
 
 \begin{document}
-    \maketitle
-    \tableofcontents
-    \newpage
+\maketitle
+\tableofcontents
 
-    \section{Objectifs}
-    Au cours de cette étape, nous avons eu les objectifs suivant :
+\newpage
+\section{Objectifs}
+    Au cours de cette étape, nous avons eu les objectifs suivants :
     \begin{itemize}
         \item Comprendre le fonctionnement des appels systèmes
         \item Comprendre le fonctionnement de la console asynchrone
         \item Créer une console synchrone
-        \item Ajouter des appels systèmes pour gérer les entrées sorties
+        \item Ajouter des appels systèmes pour gérer les entrées/sorties
     \end{itemize}
 
     Chacun de ces objectifs va être détaillé dans une partie.
 
+\section{Appels systèmes}
+    Dans cette étape, nous sommes amenés à mettre en place la notion d'appels systèmes. A chaque appel système, une exception est renvoyée. Le programme passe ensuite en mode kernel et lève cette exception puis appelle le traitant de cette exception pour effectuer les opérations demandées. Ce traitant rend ensuite la main à l'appelant en incrémentant le compteur de programme. A chaque appel système rajoutée, il faut s'assurer de satisfaire toutes les étapes nécessaires.
 
-    \section{Appels systèmes}
+    \begin{itemize}
+        \item Pour lever l'exception liée à l'appel système, il faut bien évidemment rajouter ce type-même d'exception dans les exceptions gérées par nachOS.
+        \item On rajoute ensuite le traitant de l'exception.
+        \item Il faut aussi gérer le nouveau cas où une exception du type en question est levée pour renvoyer le programme vers le traitant.
+    \end{itemize}
 
-    \section{Console asynchrone}
+\section{Console asynchrone}
+    On se propose de lancer la procédure consoleTest et d'interpréter ce qu'elle fait. On lance donc la ligne de commande :
+    \begin{center}
+        \emph{./nachos -c }
+    \end{center}
+    On remarque le programme consiste à imprimer le caractère entré dans le terminal. On peut quitter le programme en entrant la touche 'q'.
+    On modifie cette méthode pour prendre en compte la terminaison de l'entrée, soit par une fin de fichier, soit par un tty en début de ligne.
 
-    \section{Console synchrone}
+    \begin{lstlisting}
+        void
+        ConsoleTest (char *in, char *out)
+        {
+            char ch;
 
-    \section{Entrées/Sorties}
+            console = new Console (in, out, ReadAvail, WriteDone, 0);
+            readAvail = new Semaphore ("read avail", 0);
+            writeDone = new Semaphore ("write done", 0);
+
+        #ifdef CHANGED
+            /* new version of the console handling the Ctrl+D*/
+            char ch_prev = '\n';
+            for (;;)
+            {
+                readAvail->P ();    // wait for character to arrive
+                ch = console->GetChar ();
+
+                /* Exit if EOF read in file or at beggining of line in interactive mode*/
+                if ( (ch_prev == '\n' || in != NULL ) && ch == EOF)
+                    return;
+
+                console->PutChar (ch);    // echo it!
+                writeDone->P ();    // wait for write to finish
+
+                ch_prev = ch;
+            }
+        #else
+            for (;;)
+            {
+                readAvail->P ();    // wait for character to arrive
+                ch = console->GetChar ();
+                console->PutChar (ch);    // echo it!
+                writeDone->P ();    // wait for write to finish
+
+                if (ch == 'q')
+                    return;        // if q, quit
+            }
+        #endif
+        }
+    \end{lstlisting}
+
+    On explique maintenant les modifications que l'on a apportées à la procédure de base :
+    \begin{enumerate}
+        \item La boucle infinie for permet d'attendre activement la lecture de caractères
+        \item La lecture du caractère 'q' sort le programme de la boucle
+        \item On rajoute une Semaphore pour chaque opération : Lecture et Ecriture. On s'assure en effet d'avoir un caractère à lire et d'attendre le fin d'écriture d'un caractère.
+        \item On rajoute un chevron ouvrant avant et un chevron fermant après le caractère lu
+    \end{enumerate}
+
+\section{Console synchrone}
+
+    Cette partie consiste à rendre l'utilisation des Semaphores transparente en ajoutant une couche d'entrées-sorties synchrones SynchConsole au dessus de la couche Console.
+    On écrit le fichier userprog/synchconsole.h à partir du fichier machine/console.h :
+
+    \begin{lstlisting}
+        #ifdef CHANGED
+        #ifndef SYNCHCONSOLE_H
+        #define SYNCHCONSOLE_H
+        #include "copyright.h"
+        #include "utility.h"
+        #include "console.h"
+
+        class SynchConsole {
+        public:
+            /* initialize the hardware console device */
+            SynchConsole(char *readFile, char *writeFile);
+            /* clean up console emulation */
+            ~SynchConsole();
+            /* Unix putchar(3S) */
+            void SynchPutChar(const char ch);
+            /* Unix getchar(3S) */
+            int SynchGetChar();
+            /* Unix puts(3S) */
+            void SynchPutString(const char *s);
+            /* Unix fgets(3S) */
+            void SynchGetString(char *s, int n);
+
+            void SynchPutInt(int i);
+            void SynchGetInt(int *i);
+            private:
+                Console *console;
+        };
+        #endif
+        #endif
+    \end{lstlisting}
+
+    Le fichier userprog/synchconsole.cc s'agence de la manière suivante :
+    \begin{itemize}
+        \item On a un constructeur qui prend en paramètres un nom de fichier d'entrée  et un nom de fichier de sortie. Il permet d'initialiser nos 2 Semaphores déclarées static au début de la classe SynchConsole.
+        \item Les procédures Put et Get permettent d'écrire l'élément passé en paramètre de la procédure (respectivement lire) dans la console.
+        \item On n'oublie pas non plus le destructeur qui supprime la console ansi que les sémaphores.
+    \end{itemize}
+
+    \begin{lstlisting}
+        #ifdef CHANGED
+        #include "copyright.h"
+        #include "system.h"
+        #include "synchconsole.h"
+        #include "synch.h"
+
+        static Semaphore *readAvail;
+        static Semaphore *writeDone;
+
+        static void ReadAvail(int arg) { readAvail->V(); }
+        static void WriteDone(int arg) { writeDone->V(); }
+
+        SynchConsole::SynchConsole(char *readFile, char *writeFile)
+        {
+            readAvail = new Semaphore("read avail", 0);
+            writeDone = new Semaphore("write done", 0);
+            console = new Console(readFile, writeFile, ReadAvail, WriteDone, 0);
+        }
+        SynchConsole::~SynchConsole()
+        {
+            delete console;
+            delete writeDone;
+            delete readAvail;
+        }
+
+        void SynchConsole::SynchPutChar(const char ch)
+        {
+            console->PutChar(ch);    // echo it!
+            writeDone->P();    // wait for write to finish
+        }
+
+        int SynchConsole::SynchGetChar()
+        {
+            readAvail->P(); // wait for character to arrive
+
+            return (console->Feof())? EOF : (int)console->GetChar();
+        }
+
+        void SynchConsole::SynchPutString(const char s[])
+        {
+            int i;
+            for(i=0; s[i]!='\0'; i++) {
+                this->SynchPutChar(s[i]);
+            }
+        }
+
+        /**
+        * Read and create a string until EOF or \n is found. Read n-1 char at most.
+        * if \n found, it is kept. EOF isn't.
+        */
+        void SynchConsole::SynchGetString(char *s, int n)
+        {
+            int i = 0;
+            while( i < n-1) {
+                s[i] = this->SynchGetChar();
+
+                /* We stop reading at \n or EOF */
+                if(s[i] == '\n'){
+                    i++;
+                    break;
+                }
+                if((int)s[i] == EOF){
+                    break;
+                }
+                i++;
+            }
+            s[i] = '\0';
+        }
+
+        void SynchConsole::SynchPutInt(int i){
+            char str[MAX_STRING_SIZE];
+
+            snprintf(str, MAX_STRING_SIZE, "%d", i);
+            this->SynchPutString(str);
+        }
+
+        void SynchConsole::SynchGetInt(int *i){
+            char str[MAX_STRING_SIZE];
+            this->SynchGetString(str, MAX_STRING_SIZE);
+            *i=0;
+            sscanf(str, "%d", i);
+        }
+        #endif // CHANGED
+    \end{lstlisting}
+
+    On rajoute dans threads/main.cc la gestion de l'option -sc dans les options de test de la console synchrone qui est lancé par la fonction SynchConsoleTest définie comme telle.
+
+    \begin{lstlisting}
+        #ifdef CHANGED
+            else if (!strcmp (*argv, "-sc"))
+            { // test the synch console
+                if (argc == 1)
+                    SynchConsoleTest (NULL, NULL);
+                else
+                {
+                    ASSERT (argc > 2);
+                    SynchConsoleTest (*(argv + 1), *(argv + 2));
+                    argCount = 3;
+                }
+                interrupt->Halt ();    // once we start the console, then
+                // Nachos will loop forever waiting
+                // for console input
+            }
+        #endif
+    \end{lstlisting}
+
+\section{Entrées/Sorties}
+    Nous sommes amenés à proposer les appels systèmes suivants :
+    \begin{itemize}
+        \item GetChar/PutChar
+        \item SynchGetString/SynchPutString
+        \item SynchGetInt/SynchPutInt
+        \item FEOF
+    \end{itemize}
 
     \subsection{GetChar/PutChar}
-    \subsection{GetString/PutString}
+        On rajoute dans userprog/syscall.h les appels systèmes PutChar et GetChar ainsi que les procédures associées :
+        \begin{lstlisting}
+            #ifdef CHANGED
+                #define SC_GetChar        11
+                #define SC_PutChar        12
+            #endif
+
+            #ifdef CHANGED
+
+            /**
+                * return a char
+                */
+            char GetChar();
+
+            /**
+            * put a char
+            */
+            void PutChar(int c);
+            #endif
+        \end{lstlisting}
+        Dans test/start.S, on rajoute en assembleur la définition de GetChar et de PutChar :
+        \begin{lstlisting}
+            GetChar:
+                addiu $2,$0,SC_GetChar
+                syscall
+                j    $31
+                .end GetChar
+
+                .globl     PutChar
+                .ent    PutChar
+            PutChar:
+                addiu $2,$0,SC_PutChar
+                syscall
+                j    $31
+                .end PutChar
+
+                .globl     GetString
+                .ent    GetString
+        \end{lstlisting}
+        On rajoute dans le traitant de l'interruption syscall les cas où les interruptions sont du types SC\_GetChar et SC\_PutChar :
+        \begin{lstlisting}
+            #ifdef CHANGED
+            void
+            do_system_call(int syscallNum)
+            {
+                switch(syscallNum){
+                case SC_Halt:
+                    DEBUG ('a', "Shutdown, initiated by user program.\n");
+                    interrupt->Halt ();
+                    break;
+
+                case SC_GetChar:
+                {
+                    int res;
+                    DEBUG('a', "Getchar syscall.\n");
+                    res = (int)synchconsole->SynchGetChar();
+                    machine->WriteRegister(2, res);
+                }
+                break;
+
+                case SC_PutChar:
+                {
+                    char c;
+                    DEBUG('a', "Putchar syscall.\n");
+                    c = (char)machine->ReadRegister(4);//retrieve the char in r4
+                    synchconsole->SynchPutChar(c);
+                }
+                break;
+                ...
+        \end{lstlisting}
+        Ceci ne marche que si la console est créée à l'initialisation du système. On rajoute donc dans threads/system.cc les lignes suivantes pour déclarer la console dans ces conditions :
+        \begin{lstlisting}
+            #ifdef CHANGED
+                SynchConsole *synchconsole;
+            #endif
+        \end{lstlisting}
+        Dans la fonction Initialize(int argc, char **argv), on crée l'objet SynchConsole :
+        \begin{lstlisting}
+            #ifdef CHANGED
+                synchconsole = new SynchConsole(NULL, NULL);
+            #endif
+            \end{lstlisting}
+                On rajoute dans la fonction Cleanup(), la destruction de la console :
+                \begin{lstlisting}
+            #ifdef CHANGED
+                delete synchconsole;
+            #endif
+        \end{lstlisting}
+        Dans le fichier threads/system.h, on rajoute la console en tant que variable visible depuis l'extérieur (donc utilisable dans d'autres fichiers) :
+        \begin{lstlisting}
+            extern SynchConsole *synchconsole;
+        \end{lstlisting}
+        Lorsque l'on souhaite lancer putchar, on se rend compte d'une erreur. En effet, comme la SynchConsole a été déclarée extern, on s'est retrouvé avec 2 consoles instanciées au même moment, ce qui est impossible. On retire donc le mot clé extern de la déclaration de la Console.
+        On complète l'appel système SynchGetChar, le registre 2 est celui dans lequel on écrit le retour de valeur d'une fonction. On indique à la console qu'il faut lire dans ce registre :
+        \begin{lstlisting}
+            case SC_GetChar:
+                {
+                    int res;
+                    DEBUG('a', "Getchar syscall.\n");
+                    res = (int)synchconsole->SynchGetChar();
+                    machine->WriteRegister(2, res);
+                }
+                break;
+        \end{lstlisting}
+    \subsection{SynchGetString/SynchPutString}
+        On se donne pour objectif de pouvoir écrire une chaîne de caractères et non plus un seul caractère. Pour cela, nous avons besoin d'un pointeur Linux vers une chaîne et non plus un pointeur MIPS vers une chaîne comme c'est le cas présentement. On écrit donc la procédure suivante pour copier une chaîne du monde MIPS vers le monde Linux. Cette procédure est déclarée dans la classe Exception car c'est dans cette classe qu'elle sera appelée lors de la levée d'exception de type SC\_PutString.
+        \begin{lstlisting}
+            #ifdef CHANGED
+            // ----
+            // Copy a string from the MIPS machine into the system
+            // ---
+            void
+            copyStringFromMachine(int from, char *to, unsigned size){
+                unsigned read = 0;
+                int readValue;
+
+                while(read < size-1){
+                    machine->ReadMem(from + read, 1, &readValue);
+                    if(readValue == '\0'){
+                        break;
+                    }
+                    to[read] = (char) readValue;
+                    read++;
+                }
+                to[read] = '\0';
+            }
+
+
+            case SC_PutString:
+            {
+                int strMips;
+                char *str;
+                DEBUG('a', "PutString syscall.\n");
+                strMips = (int)machine->ReadRegister(4);
+                str = new char[MAX_STRING_SIZE];
+
+                copyStringFromMachine(strMips, str, MAX_STRING_SIZE);
+                synchconsole->SynchPutString(str);
+                delete[] str;
+            }
+            break;
+         \end{lstlisting}
+
+         ATTENTION : Montrez sur quelques exemples le comportement de votre implémentation, notamment en cas de chaîne trop longue.
+
+
+         De même, on implémente la procédure copyStringToMachine qui permet la transformation d'une chaîne Linux en une chaîne MIPS.
+        \begin{lstlisting}
+            // ----
+            // Copy a string from the system to the MIPS machine
+            // ---
+            void
+            copyStringToMachine(char* from, int to, unsigned size){
+                unsigned int written = 0;
+                int nextChar;
+
+                while(written < size-1){
+                    nextChar = (int)from[written];
+                    if(nextChar == EOF || nextChar == '\0'){
+                        break;
+                    }
+                    machine->WriteMem(to+written, 1, nextChar);
+                    written++;
+                    }
+                    machine->WriteMem(to+written, 1, '\0');
+            }
+            #endif
+        \end{lstlisting}
+        On appelle ensuite cette fonction pour implémenter l'appel GetString :
+        \begin{lstlisting}
+            case SC_GetString:
+            {
+                int strMips;
+                int strSize;
+                char *str;
+
+                DEBUG('a', "GetString syscall.\n");
+                strMips = (int)machine->ReadRegister(4);
+                strSize = (int)machine->ReadRegister(5);
+                str = new char[strSize];
+
+                synchconsole->SynchGetString(str, strSize);
+                copyStringToMachine(str, strMips, strSize);
+                delete[] str;
+            }
+            break;
+        \end{lstlisting}
+        Si on enlève l'appel à Halt(), le programme de la fonction main de putchar.c ne se termine jamais car on ne gère pas encore la fin de fichier. On a donc enlevé l'arrêt forcé avec le retrait de Halt(). On complète ensuite l'appel système SynchGetString :
+        \begin{lstlisting}
+            case SC_GetString:
+            {
+                int strMips;
+                int strSize;
+                char *str;
+
+                DEBUG('a', "GetString syscall.\n");
+                strMips = (int)machine->ReadRegister(4);
+                strSize = (int)machine->ReadRegister(5);
+                str = new char[strSize];
+
+                synchconsole->SynchGetString(str, strSize);
+                copyStringToMachine(str, strMips, strSize);
+                delete[] str;
+            }
+            break;
+        \end{lstlisting}
     \subsection{GetInt/PutInt}
+        Ce point se concentre sur l'écriture et la lecture d'entier signés. Nous avons décidé d'utiliser une fonction du système Linux "snprintf"' qui permet d'écrire un entier dans une chaîne de caractères. C'est cette chaîne qu'on écrit ensuit avec l'appel de SynchGetString.
+        \begin{lstlisting}
+            void SynchConsole::SynchPutInt(int i){
+                char str[MAX_STRING_SIZE];
 
+                snprintf(str, MAX_STRING_SIZE, "%d", i);
+                this->SynchPutString(str);
+            }
+        \end{lstlisting}
+        On s'occuppe maintenant du fichier userprog/exception.cc, on y ajoute le cas SC\_PutInt qui appelle le traitant SynchPutInt :
+        \begin{lstlisting}
+        case SC_PutInt:
+            {
+                int i;
+                DEBUG('a', "PutInt syscall.\n");
+                i = (int)machine->ReadRegister(4);
 
+                synchconsole->SynchPutInt(i);
+            }
+            break;
+        \end{lstlisting}
+        Pour ce qui concerne la lecture, on lit une chaîne de caractère que l'on affiche ensuite en tant qu'entier avec la fonction sscanf :
+        \begin{lstlisting}
+            void SynchConsole::SynchGetInt(int *i){
+                char str[MAX_STRING_SIZE];
+                this->SynchGetString(str, MAX_STRING_SIZE);
+                *i=0;
+                sscanf(str, "%d", i);
+            }
+        \end{lstlisting}
+        Il ne reste plus qu'à compléter le fichier /userprog/exception.cc pour gérer le cas d'une exception SC\_GetInt :
+        \begin{lstlisting}
+            case SC_GetInt:
+            {
+                int i;
+                int addr;
+                DEBUG('a', "GetInt syscall.\n");
+                /* a int* was given to getInt */
+                addr = (int)machine->ReadRegister(4);
+                synchconsole->SynchGetInt(&i);
+
+                /* Use WriteMem to write i in mips memory at addr */
+                machine->WriteMem(addr, sizeof(int), i);
+            }
+            break;
+        \end{lstlisting}
     \subsection{FEOF}
 
 \end{document}
