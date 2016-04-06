@@ -152,7 +152,7 @@ Initialize (int argc, char **argv)
     scheduler = new Scheduler ();	// initialize the ready queue
     if (randomYield)		// start the timer (if needed)
 	timer = new Timer (TimerInterruptHandler, 0, randomYield);
-
+    
     threadToBeDestroyed = NULL;
 
     // We didn't explicitly allocate the current thread we are running in.
@@ -168,10 +168,13 @@ Initialize (int argc, char **argv)
     CallOnUserAbort (Cleanup);	// if user hits ctl-C
 #endif
 
+
 #ifdef USER_PROGRAM
     machine = new Machine (debugUserProg);	// this must come first
+
 #ifdef CHANGED
     threadbitmap = new BitMap(MaxNumThread); // Initialisation de la bitmap des threads
+
     threadbitmap->Mark(0); // thread principal
 
     frameprovider = new FrameProvider(NumPhysPages);
@@ -189,6 +192,7 @@ Initialize (int argc, char **argv)
 #ifdef NETWORK
     postOffice = new PostOffice (netname, rely, 10);
 #endif
+
 }
 
 //----------------------------------------------------------------------

@@ -25,22 +25,35 @@
 #ifdef CHANGED
 //----------------------------------------------------------------------
 // ReadAtVirtual
-//      TODO comment
+//      TODO 
 //----------------------------------------------------------------------
 
 static void 
 ReadAtVirtual( OpenFile *executable, int virtualaddr,int numBytes, int position,TranslationEntry *pageTable,unsigned numPages){
-  int physicalAddr;
-  int vpn;
-  int offset;
 
-  vpn = (unsigned) virtualaddr/PageSize;
-  offset = (unsigned) virtualaddr % PageSize;
-  physicalAddr = (pageTable[vpn].physicalPage)*PageSize + offset;
+  int i ;
+
+  TranslationEntry *CurrentpageTable;
+  unsigned CurrentnumPages ;
 
   char buffer [numBytes];
   executable->ReadAt (buffer, numBytes, position);
-  bcopy(buffer,&(machine->mainMemory[physicalAddr]),numBytes);
+
+  //  bcopy(buffer,&(machine->mainMemory[physicalAddr]),numBytes);
+
+  CurrentpageTable = machine->pageTable;
+  CurrentnumPages = machine->pageTableSize ;
+
+  machine->pageTable = pageTable ;
+  machine->pageTableSize = numPages ;
+  
+  for (i = 0 ; i < numBytes; i++)
+    {
+      machine->WriteMem (virtualaddr+i, 1, buffer [i]) ;
+    }
+
+  machine->pageTable = CurrentpageTable ;
+  machine->pageTableSize = CurrentnumPages ;
 }
 #endif
 //----------------------------------------------------------------------
@@ -62,7 +75,7 @@ SwapHeader (NoffHeader * noffH)
     noffH->initData.inFileAddr = WordToHost (noffH->initData.inFileAddr);
     noffH->uninitData.size = WordToHost (noffH->uninitData.size);
     noffH->uninitData.virtualAddr =
-	WordToHost (noffH->uninitData.virtualAddr);
+    WordToHost (noffH->uninitData.virtualAddr);
     noffH->uninitData.inFileAddr = WordToHost (noffH->uninitData.inFileAddr);
 }
 
@@ -108,27 +121,30 @@ AddrSpace::AddrSpace (OpenFile * executable)
 	   numPages, size);
 // first, set up the translation
     pageTable = new TranslationEntry[numPages];
+
     for (i = 0; i < numPages; i++)
-      {
+    {
+      DEBUG ('k', "debut for avent i= %d\n",i);
       pageTable[i].virtualPage = i; // for now, virtual page # = phys page #
 
 #ifdef CHANGED
-      DEBUG ('k', "Prout de popek\n");
+      DEBUG ('k', "addrspasce avant GetEmptyFrame\n");
       pageTable[i].physicalPage = frameprovider->GetEmptyFrame();
 #else
     	pageTable[i].physicalPage = i;
 #endif
-	  pageTable[i].valid = TRUE;
-	  pageTable[i].use = FALSE;
-	  pageTable[i].dirty = FALSE;
-	  pageTable[i].readOnly = FALSE;	// if the code segment was entirely on
+  	  pageTable[i].valid = TRUE;
+  	  pageTable[i].use = FALSE;
+  	  pageTable[i].dirty = FALSE;
+  	  pageTable[i].readOnly = FALSE;	// if the code segment was entirely on
 	  // a separate page, we could set its
 	  // pages to be read-only
-      }
+    }
+    DEBUG ('k', "sortie du for\n");
 
 // zero out the entire address space, to zero the unitialized data segment
 // and the stack segment
-    bzero (machine->mainMemory, size);
+//    bzero (machine->mainMemory, size);
 
 // then, copy in the code and data segments into memory
     if (noffH.code.size > 0) {
@@ -148,7 +164,6 @@ AddrSpace::AddrSpace (OpenFile * executable)
       executable->ReadAt (&(machine->mainMemory[noffH.initData.virtualAddr]), noffH.initData.size, noffH.initData.inFileAddr);
 #endif
       }
-
 }
 
 //----------------------------------------------------------------------

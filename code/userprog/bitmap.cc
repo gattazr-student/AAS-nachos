@@ -20,13 +20,15 @@
 BitMap::BitMap (int nitems)
 {
 #ifdef CHANGED
-    sem = new Semaphore("sem",0);
+    sem = new Semaphore("sem",1);
 #endif
     numBits = nitems;
     numWords = divRoundUp (numBits, BitsInWord);
     map = new unsigned int[numWords];
     for (int i = 0; i < numBits; i++)
+      {
 	Clear (i);
+      }
 }
 
 //----------------------------------------------------------------------
@@ -137,16 +139,18 @@ BitMap::Find ()
 	if (!Test (i))
 	  {
 #ifdef CHANGED
-	      MarkUnSecu (i);
+        MarkUnSecu (i);
+        sem->V();
 #else
           Mark (i);
 #endif
+                  DEBUG ('k', "l'adr physique est = %d\n",i);
 	      return i;
 	  }
-    return -1;
 #ifdef CHANGED
     sem->V();
 #endif
+    return -1;
 }
 
 //----------------------------------------------------------------------
@@ -224,32 +228,40 @@ BitMap::WriteBack (OpenFile * file)
 int
 BitMap::Alea ()
 {
-    printf("befor\n");
     sem->P();
-    printf("after\n");
-    int i;
-    int j=0;
-    i = Random()%numBits;
-    while(Test(i)&& j<3){
+
+    if(NumClear()!=0)
+    {
+        int i;
+        int j=0;
         i = Random()%numBits;
-        j++;
-    }
-    if(!Test(i)){
-        MarkUnSecu(i);
-        return i;
-    }else{
-        i= Random()%NumClear();
-        j=0;
-        int k = 0;
-        while(j<i){
-            if(!Test(k)){
-                j++;
-            }
-            k++;
+        while(Test(i)&& j<3){
+            i = Random()%numBits;
+            j++;
         }
-        MarkUnSecu(k);
-        return(k);
+        if(!Test(i)){
+            MarkUnSecu(i);
+            DEBUG ('k', "l'adr physique est = %d\n",i);
+            sem->V();
+            return i;
+        }else{
+            i= Random()%NumClear();
+            j=0;
+            int k = 0;
+            while(j<i){
+                if(!Test(k)){
+                    j++;
+                }
+                k++;
+            }
+            MarkUnSecu(k);
+            DEBUG ('k', "l'adr physique est = %d\n",k);
+            sem->V();
+            return(k);
+        }
+    }else{
+        sem->V();
+        return(-1);
     }
-    sem->V();
 }
 #endif
