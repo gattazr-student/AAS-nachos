@@ -1,4 +1,4 @@
-// disk.cc 
+// disk.cc
 //	Routines to simulate a physical disk device; reading and writing
 //	to the disk is simulated as reading and writing to a UNIX file.
 //	See disk.h for details about the behavior of disks (and
@@ -138,6 +138,7 @@ Disk::WriteRequest(int sectorNumber, char* data)
     int ticks = ComputeLatency(sectorNumber, TRUE);
 
     ASSERT(!active);
+    DEBUG('F', "WriteRequest: sectorNumber -> %d\n", sectorNumber);
     ASSERT((sectorNumber >= 0) && (sectorNumber < NumSectors));
 
     DEBUG('d', "Writing to sector %d\n", sectorNumber);

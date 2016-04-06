@@ -375,6 +375,7 @@ bool FileSystem::CreateDirectory(char* dirName){
                 // Create directory
                 // printf("%d\n", directory->Find("."));
                 Directory *dir = new Directory(NumDirEntries, sector, directory->Find("."));
+                DEBUG('F', "\tNEW DIR Sector -> %d\n", sector);
                 // TODO: This WriteBack is failling
                 // It tries to write using a weird sector number
                 dir->WriteBack(new OpenFile(sector));

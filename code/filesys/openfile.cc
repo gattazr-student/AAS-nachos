@@ -1,4 +1,4 @@
-// openfile.cc 
+// openfile.cc
 //	Routines to manage an open Nachos file.  As in UNIX, a
 //	file must be open before we can read or write to it.
 //	Once we're all done, we can close it (in Nachos, by deleting
@@ -28,6 +28,7 @@
 
 OpenFile::OpenFile(int sector)
 {
+    DEBUG('F', "OpenFile: sector -> %d\n", sector);
     hdr = new FileHeader;
     hdr->FetchFrom(sector);
     seekPosition = 0;
@@ -158,6 +159,7 @@ OpenFile::WriteAt(const char *from, int numBytes, int position)
 			numBytes, position, fileLength);
 
     firstSector = divRoundDown(position, SectorSize);
+    DEBUG('F', "Write at: firstSector -> %d\n", firstSector);
     lastSector = divRoundDown(position + numBytes - 1, SectorSize);
     numSectors = 1 + lastSector - firstSector;
 
