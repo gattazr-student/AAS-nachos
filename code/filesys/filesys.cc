@@ -122,18 +122,18 @@ FileSystem::FileSystem(bool format)
     // to hold the file data for the directory and bitmap.
 
         DEBUG('f', "Writing bitmap and directory back to disk.\n");
-	freeMap->WriteBack(freeMapFile);	 // flush changes to disk
-	directory->WriteBack(directoryFile);
+        freeMap->WriteBack(freeMapFile);	 // flush changes to disk
+        directory->WriteBack(directoryFile);
 
-	if (DebugIsEnabled('f')) {
-	    freeMap->Print();
-	    directory->Print();
+        if (DebugIsEnabled('f')) {
+            freeMap->Print();
+            directory->Print();
 
-        delete freeMap;
-	delete directory;
-	delete mapHdr;
-	delete dirHdr;
-	}
+            delete freeMap;
+            delete directory;
+            delete mapHdr;
+            delete dirHdr;
+        }
     } else {
     // if we are not formatting the disk, just open the files representing
     // the bitmap and directory; these are left open while Nachos is running
@@ -341,66 +341,88 @@ FileSystem::Print()
 }
 
 #ifdef CHANGED
-int FileSystem::CreateDirectory(char* dirName){
-    // Check new name is shorter than FileNameMaxLen
-    if(strlen(dirName) > FileNameMaxLen){
-        printf("CreateDirectory: Dir name too long");
-        return -1;
+bool FileSystem::CreateDirectory(char* dirName){
+    Directory *directory;
+    BitMap *freeMap;
+    FileHeader *hdr;
+    int sector;
+    bool success;
+
+    DEBUG('f', "Creating directory %s\n", dirName);
+
+    directory = new Directory(NumDirEntries);
+    directory->FetchFrom(directoryFile);
+
+    if (directory->Find(dirName) != -1){
+        success = FALSE; // file is already in directory
+    } else {
+        freeMap = new BitMap(NumSectors);
+        freeMap->FetchFrom(freeMapFile);
+        sector = freeMap->Find();	// find a sector to hold the file header
+
+        if (sector == -1){
+            success = FALSE;		// no free block for file header
+        }else if (!directory->Add(dirName, sector))
+            success = FALSE;	// no space in directory
+        else {
+            hdr = new FileHeader;
+            if (!hdr->Allocate(freeMap, -1*DirectoryFileSize)){
+                success = FALSE;	// no space on disk for data
+            }else {
+                success = TRUE;
+                // everthing worked, flush all changes back to disk
+                hdr->WriteBack(sector);
+                // Create directory
+                // printf("%d\n", directory->Find("."));
+                Directory *dir = new Directory(NumDirEntries, sector, directory->Find("."));
+                // TODO: This WriteBack is failling
+                // It tries to write using a weird sector number
+                dir->WriteBack(new OpenFile(sector));
+                directory->WriteBack(directoryFile);
+                freeMap->WriteBack(freeMapFile);
+                delete dir;
+            }
+            delete hdr;
+        }
+        delete freeMap;
     }
+    delete directory;
+    return success;
+}
+
+int FileSystem::ChangeDirectory(char* dirName){
+    // printf("CHANGEDIR\n");
 
     // Retrieve parent Dir
     OpenFile *parentDirFile = directoryFile;
     Directory *parentDir = new Directory(NumDirEntries);
     parentDir->FetchFrom(parentDirFile);
 
-    // Check the name doesn't already exist
-    if(parentDir->Find(dirName) != -1){
-        printf("CreateDirectory: Dir already exists");
-        delete parentDirFile;
+    // Look for directory dirName
+    int dirHeaderSector = parentDir->Find(dirName);
+    if(dirHeaderSector == -1){
+        printf("ChangeDirectory: directory %s does not exist\n", dirName);
+        delete parentDir;
+        return -1;
+    }
+    // Create OpenFile FileHeader
+    FileHeader* targetHdr = new FileHeader();
+    targetHdr->FetchFrom(dirHeaderSector);
+
+    // Test if is a directory
+    if(targetHdr->isDir() == 0){
+        printf("ChangeDirectory: %s is not a directory\n", dirName);
+        delete targetHdr;
         delete parentDir;
         return -1;
     }
 
-    // Take a sector for Fileheader
-    BitMap *freeMap = new BitMap(NumSectors);
-    freeMap->FetchFrom(freeMapFile);
-    int freeSector = freeMap->Find();
-    // Check it was possible to take a sector
-    if(freeSector == -1){
-        printf("CreateDirectory: No sectors available");
-        delete parentDirFile;
-        delete parentDir;
-        delete freeMap;
-        return -1;
-    }
+    // Replace directoryFile
+    delete directoryFile;
+    directoryFile = new OpenFile(dirHeaderSector);
 
-    // Create FileHeader for new dir
-    FileHeader *dirHeader = new FileHeader();
-    dirHeader->Allocate(freeMap, -1*DirectoryFileSize);
-    dirHeader->WriteBack(freeSector);
-
-    // Add new dir to parent dir
-    parentDir->Add(dirName, freeSector);
-
-    // create new Directory
-    Directory *dir = new Directory(NumDirEntries, freeSector, parentDir->Find("."));
-
-    // Create dir File and save it in new directory
-    OpenFile *dirFile = new OpenFile(freeSector);
-    dir->WriteBack(dirFile);
-
-    // Save parent modification
-    parentDir->WriteBack(parentDirFile);
-    freeMap->WriteBack(freeMapFile);
-
-
-
+    delete targetHdr;
     delete parentDir;
-    delete freeMap;
-    delete dirHeader;
-    delete dir;
-    delete dirFile;
-
     return 0;
 }
 #endif

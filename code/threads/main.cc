@@ -169,6 +169,11 @@ main (int argc, char **argv)
                 ASSERT (argc > 1);
                 fileSystem->CreateDirectory (*(argv + 1));
             }
+          else if (!strcmp (*argv, "-cd"))
+             {
+                ASSERT (argc > 1);
+                fileSystem->ChangeDirectory(*(argv + 1));
+            }
 #endif
 #endif // FILESYS
 #ifdef NETWORK

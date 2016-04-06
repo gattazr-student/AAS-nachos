@@ -86,7 +86,8 @@ class FileSystem {
     void Print();			// List all the files and their contents
 
 #ifdef CHANGED
-    int CreateDirectory(char* dirName);
+    int ChangeDirectory(char* dirName);
+    bool CreateDirectory(char* dirName);
 #endif
 
   private:
