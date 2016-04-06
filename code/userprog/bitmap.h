@@ -19,6 +19,10 @@
 #include "utility.h"
 #include "openfile.h"
 
+#ifdef CHANGED
+#include "synch.h"
+#endif
+
 // Definitions helpful for representing a bitmap as an array of integers
 #define BitsInByte 	8
 #define BitsInWord 	32
@@ -47,7 +51,8 @@ class BitMap
     int NumClear ();		// Return the number of clear bits
     
 #ifdef CHANGED
-    int NumThreads ();
+    int NumMarked ();
+    int Alea ();            // Return the number of the physical page
 #endif 
 
     void Print ();		// Print contents of bitmap
@@ -64,6 +69,10 @@ class BitMap
     //  multiple of the number of bits in
     //  a word)
     unsigned int *map;		// bit storage
+#ifdef CHANGED
+    void MarkUnSecu (int which); // Mark without cemaphore
+    Semaphore *sem; // to prevent concurent access 
+#endif
 };
 
 #endif // BITMAP_H

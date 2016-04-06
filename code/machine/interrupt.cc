@@ -255,7 +255,7 @@ void
 Interrupt::Halt(int exitCode)
 {
     haltLock->Acquire();
-    while (threadbitmap->NumThreads() > 1)
+    while (threadbitmap->NumMarked() > 1)
         haltCond->Wait(haltLock);
     haltLock->Release();
 
