@@ -10,7 +10,7 @@
 
 % Package pour insertion de code
 \usepackage{listings} % Insertion de code
-\usepackage{lstautogobble}
+\usepackage{lstautogobble} % Autogobble
 \usepackage{graphicx} % insertion d'images
 % \usepackage{float} % Placement d'éléments
 \usepackage[dvipsnames]{xcolor} % colors
@@ -29,6 +29,7 @@
     basicstyle=\normalsize, % ou ça==> basicstyle=\scriptsize,
     % upquote=true,
     autogobble,
+    frame=single,
     aboveskip={1.5\baselineskip},
     columns=fullflexible,
     showstringspaces=false,
@@ -42,6 +43,9 @@
     commentstyle=\color[rgb]{0.133,0.545,0.133},
     stringstyle=\color[rgb]{0.627,0.126,0.941},
 }
+
+\setlength\parindent{0pt}
+\setlength{\parskip}{1em}
 
 \title{Step 2 : Exceptions, Entrées et sorties utilisateurs}
 \author{Tanguy MATHIEU, Florian POPEK, Rémi GATTAZ, Jordan ELLAPIN}
@@ -75,7 +79,7 @@
 \section{Console asynchrone}
     On se propose de lancer la procédure consoleTest et d'interpréter ce qu'elle fait. On lance donc la ligne de commande :
     \begin{center}
-        \emph{./nachos -c }
+        \emph{./nachos-userprog -c }
     \end{center}
     On remarque le programme consiste à imprimer le caractère entré dans le terminal. On peut quitter le programme en entrant la touche 'q'.
     On modifie cette méthode pour prendre en compte la terminaison de l'entrée, soit par une fin de fichier, soit par un tty en début de ligne.
