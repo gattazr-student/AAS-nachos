@@ -20,7 +20,7 @@ int main() {
 
     // Loop creating 4 threads
     for (i=0; i < 5; i++){
-        c[i] = 100+i;
+        c[i] = 10+i*10;
         UserThreadCreate(test, &(c[i]));
     }
 
