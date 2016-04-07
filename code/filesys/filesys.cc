@@ -391,8 +391,8 @@ bool FileSystem::CreateDirectory(char* dirName){
     return success;
 }
 
-int FileSystem::ChangeDirectory(char* dirName){
-    // printf("CHANGEDIR\n");
+bool FileSystem::ChangeDirectory(char* dirName){
+    DEBUG('F', "CHANGEDIR\n");
 
     // Retrieve parent Dir
     OpenFile *parentDirFile = directoryFile;
@@ -404,7 +404,7 @@ int FileSystem::ChangeDirectory(char* dirName){
     if(dirHeaderSector == -1){
         printf("ChangeDirectory: directory %s does not exist\n", dirName);
         delete parentDir;
-        return -1;
+        return FALSE;
     }
     // Create OpenFile FileHeader
     FileHeader* targetHdr = new FileHeader();
@@ -415,15 +415,17 @@ int FileSystem::ChangeDirectory(char* dirName){
         printf("ChangeDirectory: %s is not a directory\n", dirName);
         delete targetHdr;
         delete parentDir;
-        return -1;
+        return FALSE;
     }
 
+    DEBUG('F', "Replace directoryFile\n");
     // Replace directoryFile
     delete directoryFile;
     directoryFile = new OpenFile(dirHeaderSector);
+    DEBUG('F', "New directoryFile -> %d\n", dirHeaderSector);
 
     delete targetHdr;
     delete parentDir;
-    return 0;
+    return TRUE;
 }
 #endif
